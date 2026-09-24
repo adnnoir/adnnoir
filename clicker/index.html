@@ -14,6 +14,7 @@
     --pink: #ff5c8a;
     --mint: #55e6c6;
     --gold: #ffc94d;
+    --toxic: #b6ff3b;
     --display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
     --body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
     --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -31,6 +32,7 @@
     color: var(--text);
     font: 500 15px/1.5 var(--body);
     -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
   }
   .app {
     max-width: 1080px;
@@ -41,6 +43,7 @@
     flex-direction: column;
     gap: 20px;
   }
+  button { font: inherit; }
 
   /* En-tête */
   .top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
@@ -53,8 +56,9 @@
     margin: 0;
   }
   .brand h1 span { color: var(--pink); }
-  .brand p {
-    margin: 6px 0 0;
+  .brandrow { display: flex; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+  .brandrow p {
+    margin: 0;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: .14em;
@@ -72,18 +76,42 @@
   }
   .counter small { display: block; color: var(--muted); font-size: 13px; font-weight: 700; }
   #cps { font-family: var(--mono); color: var(--mint); font-size: 14px; font-variant-numeric: tabular-nums; }
+  #cps.low { color: var(--pink); }
 
-  .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 20px; align-items: start; }
-  @media (max-width: 780px) {
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 20px; align-items: start; }
+  @media (max-width: 800px) {
     .grid { grid-template-columns: minmax(0, 1fr); }
     .counter { text-align: left; }
   }
 
   /* Zone de clic */
-  .lab { display: flex; flex-direction: column; align-items: center; gap: 16px; padding-block: 12px; }
+  .lab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; padding-block: 4px; }
+  .banner {
+    position: relative;
+    z-index: 5;
+    background: var(--panel2);
+    border: 1px solid var(--pink);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-weight: 800;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .banner.ev-virus { border-color: var(--toxic); color: var(--toxic); }
+  .banner.ev-outage { border-color: var(--muted); }
+  .banner.ev-shower { border-color: var(--mint); color: var(--mint); }
+  .frenzy {
+    background: linear-gradient(90deg, var(--gold), var(--pink));
+    color: #1d0f14;
+    font-weight: 800;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
   .cellwrap { animation: breathe 3.2s ease-in-out infinite; max-width: 100%; }
   @keyframes breathe { 50% { transform: scale(1.025); } }
   #cell {
+    --c1: #3d3183; --c2: #1c1848; --c3: #110e30;
     display: block;
     width: min(70vw, 290px);
     max-width: 100%;
@@ -93,12 +121,12 @@
     padding: 0;
     cursor: pointer;
     overflow: hidden;
-    background: radial-gradient(circle at 36% 30%, #3d3183, #1c1848 58%, #110e30);
+    background: radial-gradient(circle at 36% 30%, var(--c1), var(--c2) 58%, var(--c3));
     box-shadow:
       0 0 0 6px rgba(255, 92, 138, .2),
       0 0 0 16px rgba(85, 230, 198, .07),
       0 24px 70px rgba(0, 0, 0, .55),
-      inset 0 0 50px rgba(255, 92, 138, .28);
+      inset 0 0 50px rgba(255, 255, 255, .12);
     transition: transform .08s ease-out, box-shadow .2s;
     touch-action: manipulation;
   }
@@ -107,41 +135,107 @@
       0 0 0 6px rgba(255, 92, 138, .35),
       0 0 0 16px rgba(85, 230, 198, .12),
       0 24px 70px rgba(0, 0, 0, .55),
-      inset 0 0 60px rgba(255, 92, 138, .38);
+      inset 0 0 60px rgba(255, 255, 255, .18);
   }
   #cell.pop { transform: scale(.94); }
-  #cell:focus-visible { outline: 3px solid var(--gold); outline-offset: 8px; }
+  #cell:focus-visible, #boss:focus-visible { outline: 3px solid var(--gold); outline-offset: 8px; }
   #cell canvas { width: 100%; height: 100%; display: block; }
+
+  .combo { display: flex; flex-direction: column; align-items: center; gap: 4px; visibility: hidden; }
+  .combo.on { visibility: visible; }
+  #comboText { font-family: var(--display); font-weight: 800; font-size: 20px; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .combobar { width: 140px; height: 5px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .combobar i { display: block; height: 100%; background: var(--gold); }
 
   .hint { margin: 0; color: var(--muted); text-align: center; }
   .hint b { color: var(--text); font-family: var(--mono); }
-
-  .frenzy {
-    background: linear-gradient(90deg, var(--gold), var(--pink));
-    color: #1d0f14;
-    font-weight: 800;
-    padding: 6px 16px;
-    border-radius: 999px;
-    font-variant-numeric: tabular-nums;
-  }
 
   .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 440px; }
   .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0; }
   .stat span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 800; }
   .stat b { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 15px; overflow-wrap: anywhere; }
 
-  /* Boutique */
-  .shop { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-  .shop h2 {
+  .bosscard {
+    width: 100%;
+    max-width: 440px;
+    box-sizing: border-box;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .bosscard b { font-family: var(--display); font-size: 16px; }
+  .bosscard span { display: block; font-size: 12px; color: var(--muted); }
+
+  .bosswrap { display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(70vw, 290px); max-width: 100%; }
+  .bosshead { display: flex; justify-content: space-between; width: 100%; font-weight: 800; gap: 8px; }
+  #bossTimer { font-family: var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; }
+  .hpbar { width: 100%; height: 12px; background: var(--ink); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  #bossHp { height: 100%; width: 100%; background: linear-gradient(90deg, var(--pink), #ff8f5c); transition: width .1s; }
+  #boss { width: 100%; aspect-ratio: 1; border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; border-radius: 50%; }
+  #boss svg { width: 100%; height: 100%; display: block; animation: bossfloat 2s ease-in-out infinite; }
+  #boss.hit svg { animation: shake .14s linear; }
+  @keyframes bossfloat { 50% { transform: translateY(-6px); } }
+  @keyframes shake { 25% { transform: translate(-5px, 2px) rotate(-2deg); } 75% { transform: translate(5px, -2px) rotate(2deg); } }
+
+  .virus { position: absolute; width: 46px; height: 46px; border: 0; padding: 0; background: none; cursor: pointer; z-index: 3; transform: translate(-50%, -50%); }
+  .virus svg { width: 100%; height: 100%; display: block; animation: jitter .45s ease-in-out infinite alternate; }
+  @keyframes jitter { to { transform: translate(3px, -3px) rotate(25deg); } }
+
+  .orb {
+    position: fixed;
+    top: -50px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    background: radial-gradient(circle at 35% 30%, #fff, var(--mint) 50%, #1d8f78);
+    box-shadow: 0 0 16px var(--mint);
+    z-index: 6;
+    animation: fall var(--dur, 4.5s) linear forwards;
+  }
+  @keyframes fall { to { transform: translateY(calc(100vh + 100px)); } }
+  #dim { position: fixed; inset: 0; background: rgba(3, 3, 12, .6); pointer-events: none; z-index: 4; }
+
+  /* Panneau */
+  .shop { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; background: var(--ink); padding: 4px; border-radius: 10px; border: 1px solid var(--line); }
+  .tab {
+    flex: 1 1 auto;
+    background: none;
+    border: 0;
+    color: var(--muted);
+    font-weight: 800;
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { background: var(--panel2); color: var(--text); }
+  .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; border-radius: 9px; background: var(--pink); color: #fff; font-size: 11px; margin-left: 4px; padding: 0 5px; box-sizing: border-box; }
+  .panel { display: flex; flex-direction: column; gap: 12px; }
+  .panel h2 {
     font-family: var(--display);
     font-size: 19px;
     margin: 0;
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
   }
-  .shop h2 small { font-family: var(--body); font-size: 12px; color: var(--muted); font-weight: 700; }
+  .panel h2 small { font-family: var(--body); font-size: 12px; color: var(--muted); font-weight: 700; }
+  .intro { margin: 0; color: var(--muted); font-size: 13px; }
+
   .ups { display: flex; flex-wrap: wrap; gap: 8px; }
   .ups .empty { color: var(--muted); font-size: 13px; margin: 0; }
   .up {
@@ -153,12 +247,15 @@
     border-radius: 10px;
     padding: 10px 12px;
     cursor: pointer;
-    font: inherit;
     transition: border-color .15s;
   }
   .up b { display: block; font-size: 14px; }
   .up span { display: block; font-size: 12px; color: var(--muted); }
   .up .price { color: var(--gold); font-family: var(--mono); font-size: 13px; margin-top: 4px; }
+
+  .buyamt { display: inline-flex; gap: 2px; background: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
+  .buyamt button { background: none; border: 0; color: var(--muted); font-family: var(--mono); font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 6px; cursor: pointer; }
+  .buyamt button[aria-pressed="true"] { background: var(--panel2); color: var(--gold); }
 
   .items { display: flex; flex-direction: column; gap: 8px; }
   .item {
@@ -172,7 +269,6 @@
     border-radius: 10px;
     padding: 10px 12px;
     color: var(--text);
-    font: inherit;
     cursor: pointer;
     transition: border-color .15s, transform .08s;
   }
@@ -196,12 +292,78 @@
   .item:not(:disabled):active, .up:not(:disabled):active { transform: scale(.985); }
   .up:disabled, .item:disabled { opacity: .45; cursor: not-allowed; }
   .item.locked .name { letter-spacing: .2em; }
-  .up:focus-visible, .item:focus-visible, .ghost:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .crgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  @media (max-width: 420px) { .crgrid { grid-template-columns: minmax(0, 1fr); } }
+  .cr { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; position: relative; min-width: 0; }
+  .cr svg { width: 64px; height: 64px; }
+  .cr.locked svg { filter: brightness(0); opacity: .55; }
+  .cr .count { position: absolute; top: 10px; right: 12px; font-family: var(--display); font-weight: 800; font-size: 22px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cr .name { font-weight: 800; }
+  .cr .desc { font-size: 12px; color: var(--muted); flex: 1; }
+
+  .action {
+    background: var(--mint);
+    color: #08231d;
+    border: 0;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .action.full { width: 100%; }
+  .action.hot { background: var(--pink); color: #fff; }
+  .action.gold { background: var(--gold); color: #2a1a00; }
+  .action:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+  .action .price { font-family: var(--mono); }
+
+  .mission { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; }
+  .mission.done { border-color: var(--gold); }
+  .mission.claimed { opacity: .6; }
+  .mission .txt { font-weight: 800; }
+  .mission .reward { display: block; font-size: 12px; color: var(--gold); font-family: var(--mono); font-weight: 500; }
+  .mission .prog { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .bar { flex: 1; height: 8px; background: var(--ink); border-radius: 4px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--mint); border-radius: 4px; }
+  .mission.done .bar > i { background: var(--gold); }
+
+  .achgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .ach { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  .ach.got { border-color: var(--mint); }
+  .ach:not(.got) { opacity: .55; }
+  .ach b { display: block; font-size: 13px; }
+  .ach span { display: block; font-size: 12px; color: var(--muted); }
+
+  .skingrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+  .skin {
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .skin.on { border-color: var(--gold); }
+  .skin:not(:disabled):not(.on):hover { border-color: var(--mint); }
+  .skin:disabled { cursor: not-allowed; opacity: .55; }
+  .swatch { width: 56px; height: 56px; border-radius: 50%; position: relative; box-shadow: 0 0 0 3px rgba(255, 255, 255, .06); }
+  .swatch i { position: absolute; width: 11px; height: 11px; border-radius: 50%; top: 50%; margin-top: -5.5px; }
+  .swatch i:first-child { left: 13px; }
+  .swatch i:last-child { right: 13px; }
+  .skin b { font-size: 13px; }
+  .skin span { font-size: 11px; color: var(--muted); }
 
   .reset { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
-  .ghost { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; padding: 6px 10px; font: inherit; font-weight: 700; cursor: pointer; }
+  .ghost { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; padding: 5px 10px; font-weight: 700; font-size: 13px; cursor: pointer; }
   .ghost:hover { color: var(--text); }
   .ghost.danger { border-color: var(--pink); color: var(--pink); }
+  .up:focus-visible, .item:focus-visible, .ghost:focus-visible, .tab:focus-visible, .action:focus-visible, .skin:focus-visible, .buyamt button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
   /* Effets */
   .float {
@@ -214,10 +376,11 @@
     text-shadow: 0 2px 10px rgba(0, 0, 0, .7);
     transform: translate(-50%, -50%);
     animation: rise .9s ease-out forwards;
-    z-index: 5;
+    z-index: 7;
     white-space: nowrap;
   }
   .float.gold { color: var(--gold); font-size: 22px; }
+  .float.hurt { color: var(--pink); font-size: 20px; }
   @keyframes rise { to { opacity: 0; transform: translate(-50%, -170%); } }
 
   #golden {
@@ -262,11 +425,12 @@
     animation: tin .25s ease-out, tout .4s ease-in 3.4s forwards;
   }
   .toast.gold { border-color: var(--gold); }
+  .toast.bad { border-color: var(--pink); }
   @keyframes tin { from { opacity: 0; transform: translateY(10px); } }
   @keyframes tout { to { opacity: 0; transform: translateY(10px); } }
 
   @media (prefers-reduced-motion: reduce) {
-    .cellwrap, #golden { animation: none; }
+    .cellwrap, #golden, #boss svg, .virus svg { animation: none; }
     .float { animation-duration: .6s; }
   }
 </style>
@@ -275,9 +439,12 @@
   <header class="top">
     <div class="brand">
       <h1>ADN <span>Noir</span></h1>
-      <p>Le labo clicker</p>
+      <div class="brandrow">
+        <p>Le labo clicker</p>
+        <button id="soundBtn" class="ghost" type="button" aria-pressed="true">Son : activé</button>
+      </div>
     </div>
-    <div class="counter" aria-live="off">
+    <div class="counter">
       <span id="adn">0</span>
       <small>brins d’ADN</small>
       <span id="cps">0 / s</span>
@@ -285,30 +452,82 @@
   </header>
 
   <main class="grid">
-    <section class="lab">
-      <div class="cellwrap">
+    <section class="lab" id="lab">
+      <div id="eventBanner" class="banner" hidden></div>
+      <div id="frenzy" class="frenzy" hidden></div>
+
+      <div class="cellwrap" id="cellwrap">
         <button id="cell" type="button" aria-label="Cliquer la cellule pour extraire de l’ADN"><canvas id="helix"></canvas></button>
       </div>
-      <p class="hint">Clique la cellule pour extraire de l’ADN · <b id="perclick">+1</b> par clic</p>
-      <div id="frenzy" class="frenzy" hidden></div>
+
+      <div class="bosswrap" id="bosswrap" hidden>
+        <div class="bosshead"><span id="bossName">Cellule géante</span><span id="bossTimer">30 s</span></div>
+        <div class="hpbar"><div id="bossHp"></div></div>
+        <button id="boss" type="button" aria-label="Frapper le boss"></button>
+      </div>
+
+      <div class="combo" id="combo"><span id="comboText">Combo</span><div class="combobar"><i id="comboBar"></i></div></div>
+      <p class="hint" id="hint">Clique la cellule pour extraire de l’ADN · <b id="perclick">+1</b> par clic</p>
+
       <div class="stats">
         <div class="stat"><span>Total extrait</span><b id="sTotal">0</b></div>
         <div class="stat"><span>Clics</span><b id="sClicks">0</b></div>
         <div class="stat"><span>Temps de jeu</span><b id="sTime">0 s</b></div>
       </div>
+
+      <div class="bosscard">
+        <div><b id="bossCardTitle">Boss</b><span id="bossInfo"></span></div>
+        <button id="bossBtn" class="action hot" type="button">Combattre</button>
+      </div>
     </section>
 
     <aside class="shop">
-      <h2>Améliorations <small>achat unique</small></h2>
-      <div id="upgrades" class="ups"></div>
-      <h2>Équipement du labo <small>produit tout seul</small></h2>
-      <div id="buildings" class="items"></div>
-      <div class="reset">
-        <button id="resetBtn" class="ghost" type="button">Recommencer à zéro</button>
-        <span id="confirm" hidden>Tout effacer ?
-          <button id="yes" class="ghost danger" type="button">Oui, effacer</button>
-          <button id="no" class="ghost" type="button">Non</button>
-        </span>
+      <nav class="tabs" role="tablist" aria-label="Sections du labo">
+        <button class="tab" role="tab" type="button" data-tab="labo" id="t-labo">Labo</button>
+        <button class="tab" role="tab" type="button" data-tab="creatures" id="t-creatures">Créatures</button>
+        <button class="tab" role="tab" type="button" data-tab="missions" id="t-missions">Missions</button>
+        <button class="tab" role="tab" type="button" data-tab="succes" id="t-succes">Succès</button>
+        <button class="tab" role="tab" type="button" data-tab="skins" id="t-skins">Skins</button>
+      </nav>
+
+      <div class="panel" id="p-labo" role="tabpanel">
+        <h2>Améliorations <small>achat unique</small></h2>
+        <div id="upgrades" class="ups"></div>
+        <h2>Équipement du labo
+          <span class="buyamt" role="group" aria-label="Quantité à acheter">
+            <button type="button" data-amt="1">×1</button>
+            <button type="button" data-amt="10">×10</button>
+            <button type="button" data-amt="100">×100</button>
+          </span>
+        </h2>
+        <div id="buildings" class="items"></div>
+        <div class="reset">
+          <button id="resetBtn" class="ghost" type="button">Recommencer à zéro</button>
+          <span id="confirm" hidden>Tout effacer ?
+            <button id="yes" class="ghost danger" type="button">Oui, effacer</button>
+            <button id="no" class="ghost" type="button">Non</button>
+          </span>
+        </div>
+      </div>
+
+      <div class="panel" id="p-creatures" role="tabpanel" hidden>
+        <p class="intro">Fabrique des créatures avec ton ADN. Chacune te donne un bonus permanent, et tu peux en avoir plusieurs.</p>
+        <div id="creatures" class="crgrid"></div>
+      </div>
+
+      <div class="panel" id="p-missions" role="tabpanel" hidden>
+        <p class="intro">Trois nouvelles missions chaque jour. Termine-les pour gagner de l’ADN.</p>
+        <div id="missions" class="items"></div>
+      </div>
+
+      <div class="panel" id="p-succes" role="tabpanel" hidden>
+        <p class="intro" id="achSummary"></p>
+        <div id="achList" class="achgrid"></div>
+      </div>
+
+      <div class="panel" id="p-skins" role="tabpanel" hidden>
+        <p class="intro">Change le look de ta cellule. Chaque skin se débloque avec un exploit.</p>
+        <div id="skinList" class="skingrid"></div>
       </div>
     </aside>
   </main>
@@ -320,56 +539,148 @@
     <path d="M11 8h8M11 22h8"/>
   </svg>
 </button>
+<div id="dim" hidden></div>
 <div id="toasts" class="toasts" aria-live="polite"></div>
 
 <script>
 (() => {
+  // ================= Données du jeu =================
   const BUILDINGS = [
-    { id: 'pipette',   name: 'Pipette',            desc: 'Aspire un brin de temps en temps.',                   cost: 15,        rate: 0.1 },
-    { id: 'micro',     name: 'Microscope',         desc: 'Repère l’ADN caché dans la poussière.',              cost: 100,       rate: 1 },
-    { id: 'stagiaire', name: 'Stagiaire du labo',  desc: 'Motivé, mal payé, étonnamment efficace.',            cost: 1100,      rate: 8 },
+    { id: 'pipette',   name: 'Pipette',            desc: 'Aspire un brin de temps en temps.',                   cost: 15,    rate: 0.1 },
+    { id: 'micro',     name: 'Microscope',         desc: 'Repère l’ADN caché dans la poussière.',              cost: 100,   rate: 1 },
+    { id: 'stagiaire', name: 'Stagiaire du labo',  desc: 'Motivé, mal payé, étonnamment efficace.',            cost: 1100,  rate: 8 },
     { id: 'centri',    name: 'Centrifugeuse',      desc: 'Fait tourner les cellules jusqu’à ce qu’elles lâchent tout.', cost: 12000, rate: 47 },
-    { id: 'clone',     name: 'Salle de clonage',   desc: 'Des cellules qui fabriquent des cellules.',          cost: 130000,    rate: 260 },
-    { id: 'seq',       name: 'Séquenceur géant',   desc: 'Lit 3 milliards de bases avant le petit-déj.',       cost: 1.4e6,     rate: 1400 },
-    { id: 'mutant',    name: 'Mutant noir',        desc: 'Personne ne sait d’où il vient. Mais il produit.',   cost: 2e7,       rate: 7800 },
-    { id: 'planete',   name: 'Planète-labo',       desc: 'Une planète entière transformée en paillasse.',      cost: 3.3e8,     rate: 44000 },
+    { id: 'clone',     name: 'Salle de clonage',   desc: 'Des cellules qui fabriquent des cellules.',          cost: 130000, rate: 260 },
+    { id: 'seq',       name: 'Séquenceur géant',   desc: 'Lit 3 milliards de bases avant le petit-déj.',       cost: 1.4e6, rate: 1400 },
+    { id: 'mutant',    name: 'Mutant noir',        desc: 'Personne ne sait d’où il vient. Mais il produit.',   cost: 2e7,   rate: 7800 },
+    { id: 'planete',   name: 'Planète-labo',       desc: 'Une planète entière transformée en paillasse.',      cost: 3.3e8, rate: 44000 },
   ];
   const UPGRADES = [
-    { id: 'gants',    name: 'Gants en latex',     desc: 'Clic ×2',                              cost: 50,    type: 'click', val: 2 },
-    { id: 'doigts',   name: 'Doigts de fée',      desc: 'Clic ×2',                              cost: 600,   type: 'click', val: 2 },
-    { id: 'cafe',     name: 'Machine à café',     desc: 'Production ×1,5',                      cost: 2000,  type: 'prod',  val: 1.5 },
-    { id: 'scalpel',  name: 'Scalpel laser',      desc: 'Chaque clic ajoute 2 % de ta prod/s',  cost: 8000,  type: 'pct',   val: 0.02 },
-    { id: 'titane',   name: 'Gants en titane',    desc: 'Clic ×3',                              cost: 25000, type: 'click', val: 3 },
-    { id: 'uv',       name: 'Lampes UV',          desc: 'Production ×2',                        cost: 90000, type: 'prod',  val: 2 },
-    { id: 'crispr',   name: 'Ciseaux CRISPR',     desc: 'Production ×2',                        cost: 1.5e6, type: 'prod',  val: 2 },
-    { id: 'quantique',name: 'Scalpel quantique',  desc: 'Chaque clic ajoute 5 % de ta prod/s',  cost: 5e6,   type: 'pct',   val: 0.05 },
-    { id: 'noir',     name: 'ADN noir pur',       desc: 'Production ×3',                        cost: 8e7,   type: 'prod',  val: 3 },
+    { id: 'gants',     name: 'Gants en latex',    desc: 'Clic ×2',                             cost: 50,    type: 'click', val: 2 },
+    { id: 'doigts',    name: 'Doigts de fée',     desc: 'Clic ×2',                             cost: 600,   type: 'click', val: 2 },
+    { id: 'cafe',      name: 'Machine à café',    desc: 'Production ×1,5',                     cost: 2000,  type: 'prod',  val: 1.5 },
+    { id: 'scalpel',   name: 'Scalpel laser',     desc: 'Chaque clic ajoute 2 % de ta prod/s', cost: 8000,  type: 'pct',   val: 0.02 },
+    { id: 'titane',    name: 'Gants en titane',   desc: 'Clic ×3',                             cost: 25000, type: 'click', val: 3 },
+    { id: 'uv',        name: 'Lampes UV',         desc: 'Production ×2',                       cost: 90000, type: 'prod',  val: 2 },
+    { id: 'crispr',    name: 'Ciseaux CRISPR',    desc: 'Production ×2',                       cost: 1.5e6, type: 'prod',  val: 2 },
+    { id: 'quantique', name: 'Scalpel quantique', desc: 'Chaque clic ajoute 5 % de ta prod/s', cost: 5e6,   type: 'pct',   val: 0.05 },
+    { id: 'noir',      name: 'ADN noir pur',      desc: 'Production ×3',                       cost: 8e7,   type: 'prod',  val: 3 },
   ];
+
+  const CREATURE_ART = {
+    gluon: '<path d="M12 44c-4-12 4-30 20-30s24 16 20 30c-2 7-10 8-20 8s-18-1-20-8z" fill="#55e6c6"/><circle cx="21" cy="23" r="3" fill="#fff" opacity=".5"/><ellipse cx="25" cy="32" rx="5" ry="6" fill="#fff"/><ellipse cx="40" cy="32" rx="5" ry="6" fill="#fff"/><circle cx="26" cy="33" r="2.5" fill="#111"/><circle cx="41" cy="33" r="2.5" fill="#111"/><path d="M28 43q4.5 4 9 0" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>',
+    rat: '<path d="M44 44c8 0 10-6 16-4M44 46c8 4 8 10 14 12M42 48c4 6 0 10 4 14" stroke="#ff9ab5" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="31" cy="42" rx="17" ry="11" fill="#8d8fb3"/><circle cx="17" cy="31" r="10" fill="#8d8fb3"/><circle cx="12" cy="21" r="5" fill="#8d8fb3"/><circle cx="12" cy="21" r="2.5" fill="#ff9ab5"/><circle cx="21" cy="20" r="5" fill="#8d8fb3"/><circle cx="21" cy="20" r="2.5" fill="#ff9ab5"/><circle cx="14" cy="30" r="2" fill="#111"/><circle cx="8" cy="34" r="2.2" fill="#ff5c8a"/>',
+    chatpoulpe: '<path d="M16 38c-2 8-8 10-10 18M25 42c0 8-4 12-2 18M39 42c0 8 4 12 2 18M48 38c2 8 8 10 10 18" stroke="#a78bfa" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M12 30 14 8l12 10h12l12-10 2 22c0 10-9 14-20 14s-20-4-20-14z" fill="#a78bfa"/><ellipse cx="25" cy="28" rx="4" ry="5" fill="#ffc94d"/><ellipse cx="39" cy="28" rx="4" ry="5" fill="#ffc94d"/><rect x="24" y="24" width="2" height="8" rx="1" fill="#111"/><rect x="38" y="24" width="2" height="8" rx="1" fill="#111"/><path d="M29 35l3 2 3-2" stroke="#111" stroke-width="1.8" fill="none"/>',
+    mouche: '<ellipse cx="18" cy="26" rx="14" ry="8" fill="#cfe8ff" opacity=".55" transform="rotate(-25 18 26)"/><ellipse cx="46" cy="26" rx="14" ry="8" fill="#cfe8ff" opacity=".55" transform="rotate(25 46 26)"/><ellipse cx="32" cy="42" rx="11" ry="15" fill="#3a3d5c"/><path d="M23 40h18M22 47h20M25 53h14" stroke="#55e6c6" stroke-width="2"/><circle cx="32" cy="23" r="10" fill="#3a3d5c"/><circle cx="26" cy="21" r="6" fill="#ff5c8a"/><circle cx="38" cy="21" r="6" fill="#ff5c8a"/><circle cx="24" cy="19" r="1.8" fill="#fff"/><circle cx="36" cy="19" r="1.8" fill="#fff"/>',
+    champi: '<rect x="22" y="30" width="20" height="26" rx="8" fill="#f1e6d8"/><path d="M6 32C6 16 18 8 32 8s26 8 26 24z" fill="#ff5c8a"/><circle cx="20" cy="21" r="4" fill="#fff"/><circle cx="35" cy="15" r="3" fill="#fff"/><circle cx="46" cy="24" r="3.5" fill="#fff"/><path d="M25 37l5 3M39 37l-5 3" stroke="#111" stroke-width="2" stroke-linecap="round"/><circle cx="28" cy="43" r="2" fill="#e0a400"/><circle cx="36" cy="43" r="2" fill="#e0a400"/><path d="M27 49h10l-2 4-1.5-3-1.5 3-1.5-3-1.5 3z" fill="#fff" stroke="#111" stroke-width="1"/>',
+    dragon: '<path d="M8 54c10 0 10-14 20-14s10 14 20 6 4-24-6-26" stroke="#ff5c8a" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M8 54c10 0 10-14 20-14s10 14 20 6 4-24-6-26" stroke="#55e6c6" stroke-width="2.5" stroke-dasharray="3 5" fill="none"/><path d="M37 12l-5-9 8 5M46 10l2-8 3 9" fill="#ffc94d"/><circle cx="42" cy="18" r="9" fill="#ff5c8a"/><circle cx="45" cy="16" r="2.2" fill="#111"/><path d="M50 21l8 1" stroke="#ffc94d" stroke-width="2" stroke-linecap="round"/>',
+  };
+  const CREATURES = [
+    { id: 'gluon',      name: 'Gluon le blob',       desc: '+10 % de puissance de clic',              cost: 1000,  type: 'click', val: 0.10, max: 25 },
+    { id: 'rat',        name: 'Rat à trois queues',  desc: '+5 % de production',                      cost: 8000,  type: 'prod',  val: 0.05, max: 25 },
+    { id: 'chatpoulpe', name: 'Chat-poulpe',         desc: 'Mutations dorées 15 % plus fréquentes',   cost: 60000, type: 'gold',  val: 0.15, max: 5 },
+    { id: 'mouche',     name: 'Mouche géante',       desc: '+10 % de production',                     cost: 4e5,   type: 'prod',  val: 0.10, max: 25 },
+    { id: 'champi',     name: 'Champi-loup',         desc: '+50 % de dégâts contre le boss',          cost: 2e6,   type: 'boss',  val: 0.5,  max: 10 },
+    { id: 'dragon',     name: 'Dragon d’ADN',        desc: '+25 % de production et de clic',          cost: 5e7,   type: 'both',  val: 0.25, max: 10 },
+  ];
+
+  const SKINS = [
+    { id: 'classic', name: 'Classique',   a: '#ff5c8a', b: '#55e6c6', bg: ['#3d3183', '#1c1848', '#110e30'], need: 'Dès le départ',           test: () => true },
+    { id: 'braise',  name: 'Braise',      a: '#ff7a3d', b: '#ffd166', bg: ['#7a2a1a', '#3a1210', '#1c0806'], need: '1 000 clics',             test: s => s.clicks >= 1000 },
+    { id: 'glace',   name: 'Glace',       a: '#9ad7ff', b: '#ffffff', bg: ['#2a5a8a', '#12294a', '#081528'], need: '100 000 ADN extraits',    test: s => s.total >= 1e5 },
+    { id: 'toxique', name: 'Toxique',     a: '#b6ff3b', b: '#3bffb0', bg: ['#2d5a1a', '#12300f', '#081a07'], need: 'Détruire 20 virus',       test: s => s.stats.viruses >= 20 },
+    { id: 'or',      name: 'Or pur',      a: '#ffc94d', b: '#fff1b8', bg: ['#7a5a14', '#3a2a08', '#1c1404'], need: '10 mutations dorées',     test: s => s.stats.goldens >= 10 },
+    { id: 'arc',     name: 'Arc-en-ciel', a: '#ff5c8a', b: '#55e6c6', bg: ['#4a2a6a', '#221438', '#100a1c'], need: 'Battre le boss niveau 3', test: s => s.bossLevel >= 3, rainbow: true },
+    { id: 'neant',   name: 'Néant',       a: '#ffffff', b: '#6b6b8a', bg: ['#1a1a1f', '#0a0a0d', '#000000'], need: '1 milliard d’ADN extraits', test: s => s.total >= 1e9 },
+  ];
+
   const countB = s => Object.values(s.owned).reduce((a, b) => a + b, 0);
+  const countCr = s => Object.values(s.creatures).reduce((a, b) => a + b, 0);
   const ACH = [
-    ['c1',   s => s.clicks >= 1,     'Premier clic ! La science commence.'],
-    ['c100', s => s.clicks >= 100,   '100 clics. Ton doigt prend du muscle.'],
-    ['c1k',  s => s.clicks >= 1000,  '1 000 clics. Tendinite en approche.'],
-    ['b1',   s => countB(s) >= 1,    'Premier équipement acheté. Le labo prend vie.'],
-    ['b25',  s => countB(s) >= 25,   '25 équipements. Ça commence à être serré.'],
-    ['b100', s => countB(s) >= 100,  '100 équipements. Il faut pousser les murs.'],
-    ['t1k',  s => s.total >= 1e3,    '1 000 brins d’ADN extraits.'],
-    ['t1m',  s => s.total >= 1e6,    'Un million de brins ! Tu deviens connu.'],
-    ['t1md', s => s.total >= 1e9,    'Un milliard. Officiellement savant fou.'],
+    ['c1',    'Premier clic',          'Cliquer la cellule',                      s => s.clicks >= 1],
+    ['c100',  'Doigt musclé',          '100 clics',                               s => s.clicks >= 100],
+    ['c1k',   'Tendinite',             '1 000 clics',                             s => s.clicks >= 1000],
+    ['c10k',  'Main bionique',         '10 000 clics',                            s => s.clicks >= 10000],
+    ['t1k',   'Petit labo',            'Extraire 1 000 ADN',                      s => s.total >= 1e3],
+    ['t1m',   'Millionnaire',          'Extraire 1 million d’ADN',                s => s.total >= 1e6],
+    ['t1md',  'Savant fou',            'Extraire 1 milliard d’ADN',               s => s.total >= 1e9],
+    ['t1bn',  'Dieu de la génétique',  'Extraire 1 billion d’ADN',                s => s.total >= 1e12],
+    ['b1',    'Premier équipement',    'Acheter un équipement',                   s => countB(s) >= 1],
+    ['b50',   'Labo bien rempli',      'Posséder 50 équipements',                 s => countB(s) >= 50],
+    ['b200',  'Usine à ADN',           'Posséder 200 équipements',                s => countB(s) >= 200],
+    ['allb',  'Collection complète',   'Un exemplaire de chaque équipement',      s => BUILDINGS.every(b => s.owned[b.id] > 0)],
+    ['up',    'Tout acheté',           'Acheter toutes les améliorations',        s => s.ups.length >= UPGRADES.length],
+    ['g1',    'Touché doré',           'Attraper une mutation dorée',             s => s.stats.goldens >= 1],
+    ['g10',   'Chasseur d’or',         'Attraper 10 mutations dorées',            s => s.stats.goldens >= 10],
+    ['v1',    'Antivirus',             'Détruire un virus',                       s => s.stats.viruses >= 1],
+    ['v50',   'Système immunitaire',   'Détruire 50 virus',                       s => s.stats.viruses >= 50],
+    ['co25',  'Combo !',               'Atteindre un combo de 25',                s => s.stats.maxCombo >= 25],
+    ['co80',  'Combo max',             'Atteindre un combo de 80',                s => s.stats.maxCombo >= 80],
+    ['cr1',   'Docteur Frankenstein',  'Fabriquer une créature',                  s => countCr(s) >= 1],
+    ['cr15',  'Zoo mutant',            'Posséder 15 créatures',                   s => countCr(s) >= 15],
+    ['allcr', 'Bestiaire complet',     'Posséder chaque créature',                s => CREATURES.every(c => s.creatures[c.id] > 0)],
+    ['boss1', 'Tueur de cellule',      'Battre le boss',                          s => s.bossLevel >= 1],
+    ['boss5', 'Chasseur de boss',      'Battre le boss niveau 5',                 s => s.bossLevel >= 5],
+    ['m1',    'Au rapport',            'Terminer une mission',                    s => s.stats.missions >= 1],
+    ['m15',   'Employé du mois',       'Terminer 15 missions',                    s => s.stats.missions >= 15],
+    ['skin',  'Relooking',             'Changer de skin',                         s => s.stats.skinChanged >= 1],
+  ];
+  const ACH_BONUS = 0.02;
+
+  const BOSS_UNLOCK = 5000;
+  const MISSION_POOL = [
+    { id: 'clicks',    text: n => `Clique ${fmtInt(n)} fois`,          n: 300, key: 'clicks' },
+    { id: 'buys',      text: n => `Achète ${n} équipements`,          n: 10,  key: 'buys' },
+    { id: 'viruses',   text: n => `Détruis ${n} virus`,               n: 5,   key: 'viruses',   need: s => s.total >= 200 },
+    { id: 'goldens',   text: n => `Attrape ${n} mutations dorées`,    n: 2,   key: 'goldens' },
+    { id: 'combo',     text: n => `Atteins un combo de ${n}`,         n: 40,  key: 'maxCombo' },
+    { id: 'creatures', text: n => `Fabrique ${n} créature`,           n: 1,   key: 'creatures', need: s => s.total >= 500 },
+    { id: 'bosses',    text: n => `Bats le boss ${n} fois`,           n: 1,   key: 'bosses',    need: s => s.total >= BOSS_UNLOCK },
+    { id: 'played',    text: n => `Joue ${n / 60} minutes`,           n: 600, key: 'played' },
   ];
 
   const KEY = 'adn-noir-save-v1';
   const FRENZY_MULT = 7;
-  const fresh = () => ({ adn: 0, total: 0, clicks: 0, played: 0, owned: {}, ups: [], ach: [], last: Date.now() });
+  const COMBO_WINDOW = 800;
+  const COMBO_CAP = 80;
+
+  // ================= État =================
+  const freshStats = () => ({ goldens: 0, viruses: 0, bosses: 0, maxCombo: 0, creatures: 0, missions: 0, skinChanged: 0 });
+  const fresh = () => ({
+    adn: 0, total: 0, clicks: 0, played: 0,
+    owned: {}, ups: [], ach: [], creatures: {},
+    skin: 'classic', muted: false, buyAmt: 1, tab: 'labo',
+    bossLevel: 0, bossReadyAt: 0,
+    stats: freshStats(), daily: null,
+    last: Date.now(),
+  });
+  function normalize(o) {
+    const s = Object.assign(fresh(), o || {});
+    s.stats = Object.assign(freshStats(), (o && o.stats) || {});
+    if (!s.owned || typeof s.owned !== 'object') s.owned = {};
+    if (!s.creatures || typeof s.creatures !== 'object') s.creatures = {};
+    if (!Array.isArray(s.ups)) s.ups = [];
+    const achIds = new Set(ACH.map(a => a[0]));
+    s.ach = Array.isArray(s.ach) ? s.ach.filter(id => achIds.has(id)) : [];
+    if (![1, 10, 100].includes(s.buyAmt)) s.buyAmt = 1;
+    if (!SKINS.some(k => k.id === s.skin)) s.skin = 'classic';
+    return s;
+  }
+
   let state = fresh();
   let frenzyUntil = 0;
   let nextGolden = Date.now() + rand(30, 60) * 1000;
   let goldenHideAt = 0;
+  let combo = 0, lastClickAt = 0;
+  let ev = null, virusCount = 0;
+  let nextEvent = Date.now() + rand(50, 100) * 1000;
+  let boss = null;
 
   const $ = id => document.getElementById(id);
   function rand(a, b) { return a + Math.random() * (b - a); }
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
-  // ---------- Formatage ----------
+  // ================= Formatage =================
   const SUF = ['', 'k', 'M', 'Md', 'Bn', 'Bd', 'Tn', 'Td'];
   function fmt(n, dec) {
     if (!isFinite(n)) return '∞';
@@ -382,6 +693,7 @@
     const s = n < 10 ? n.toFixed(2) : n < 100 ? n.toFixed(1) : String(Math.floor(n));
     return s.replace('.', ',') + ' ' + SUF[i];
   }
+  function fmtInt(n) { return Math.floor(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
   function fmtTime(sec) {
     sec = Math.floor(sec);
     if (sec < 60) return sec + ' s';
@@ -390,9 +702,60 @@
     const h = Math.floor(m / 60);
     return h + ' h ' + String(m % 60).padStart(2, '0');
   }
+  const fmtClock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 
-  // ---------- Calculs ----------
+  // ================= Sons =================
+  let actx = null;
+  function audio() {
+    if (state.muted) return null;
+    if (!actx) {
+      try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+    }
+    if (actx.state === 'suspended') actx.resume().catch(() => {});
+    return actx;
+  }
+  function tone(freq, dur, type = 'sine', vol = 0.12, delay = 0, slide = 0) {
+    const a = audio();
+    if (!a) return;
+    try {
+      const t = a.currentTime + delay;
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, freq + slide), t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(a.destination);
+      o.start(t);
+      o.stop(t + dur + 0.03);
+    } catch (e) {}
+  }
+  const SFX = {
+    click: c => tone(380 + Math.min(c, COMBO_CAP) * 9, 0.07, 'triangle', 0.1, 0, 140),
+    buy: () => { tone(523, 0.08, 'square', 0.05); tone(784, 0.1, 'square', 0.05, 0.07); },
+    craft: () => [392, 523, 659].forEach((f, i) => tone(f, 0.14, 'sawtooth', 0.05, i * 0.06)),
+    gold: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.14, 'triangle', 0.09, i * 0.07)),
+    ach: () => [784, 988, 1319].forEach((f, i) => tone(f, 0.2, 'sine', 0.09, i * 0.09)),
+    virus: () => { tone(150, 0.35, 'sawtooth', 0.06, 0, -70); tone(160, 0.35, 'sawtooth', 0.05, 0.15, -80); },
+    pop: () => tone(900, 0.08, 'square', 0.06, 0, -600),
+    orb: () => tone(1200, 0.1, 'sine', 0.08, 0, 500),
+    hit: () => tone(110 + Math.random() * 40, 0.1, 'square', 0.08, 0, -50),
+    outage: () => tone(220, 0.6, 'sawtooth', 0.06, 0, -170),
+    win: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.22, 'triangle', 0.1, i * 0.09)),
+    lose: () => [392, 330, 262].forEach((f, i) => tone(f, 0.25, 'sine', 0.09, i * 0.15)),
+  };
+
+  // ================= Calculs =================
   const has = id => state.ups.includes(id);
+  function crVal(type) {
+    let v = 0;
+    for (const c of CREATURES) {
+      const n = state.creatures[c.id] || 0;
+      if (c.type === type || (c.type === 'both' && (type === 'prod' || type === 'click'))) v += n * c.val;
+    }
+    return v;
+  }
   function mults() {
     let click = 1, prod = 1, pct = 0;
     for (const u of UPGRADES) if (has(u.id)) {
@@ -400,58 +763,113 @@
       else if (u.type === 'prod') prod *= u.val;
       else pct += u.val;
     }
+    prod *= (1 + ACH_BONUS * state.ach.length) * (1 + crVal('prod'));
+    click *= 1 + crVal('click');
     return { click, prod, pct };
   }
-  function baseCps() {
-    const m = mults();
+  function rawCps() {
     let c = 0;
     for (const b of BUILDINGS) c += (state.owned[b.id] || 0) * b.rate;
-    return c * m.prod;
+    return c * mults().prod;
   }
   const frenzy = () => Date.now() < frenzyUntil;
-  const cps = () => baseCps() * (frenzy() ? FRENZY_MULT : 1);
+  const outage = () => ev && ev.type === 'outage';
+  function eventFactor() {
+    if (outage()) return 0;
+    if (ev && ev.type === 'virus' && virusCount > 0) return 0.5;
+    return 1;
+  }
+  const cps = () => rawCps() * eventFactor() * (frenzy() ? FRENZY_MULT : 1);
+  const comboMult = () => 1 + Math.min(combo, COMBO_CAP) / 20;
   function clickValue() {
     const m = mults();
-    return (m.click + baseCps() * m.pct) * (frenzy() ? FRENZY_MULT : 1);
+    return (m.click + rawCps() * m.pct) * comboMult() * (frenzy() ? FRENZY_MULT : 1) * (outage() ? 3 : 1);
   }
-  const priceOf = b => Math.ceil(b.cost * Math.pow(1.15, state.owned[b.id] || 0));
+  function priceOf(b, n = state.buyAmt) {
+    const o = state.owned[b.id] || 0, r = 1.15;
+    return Math.ceil(b.cost * Math.pow(r, o) * (Math.pow(r, n) - 1) / (r - 1));
+  }
+  const crPrice = c => Math.ceil(c.cost * Math.pow(1.6, state.creatures[c.id] || 0));
+  const rewardBase = () => Math.max(300, rawCps() * 300);
+  function gain(v) { state.adn += v; state.total += v; }
 
-  // ---------- Sauvegarde ----------
+  // ================= Missions du jour =================
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  function seeded(str) {
+    let h = 2166136261;
+    for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+    return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+  }
+  function ensureDaily() {
+    const d = today();
+    if (state.daily && state.daily.date === d) return;
+    const r = seeded(d);
+    const pool = MISSION_POOL.filter(m => !m.need || m.need(state)).slice();
+    const chosen = [];
+    while (chosen.length < 3 && pool.length) chosen.push(pool.splice(Math.floor(r() * pool.length), 1)[0].id);
+    state.daily = { date: d, missions: chosen, claimed: [], c: { clicks: 0, buys: 0, viruses: 0, goldens: 0, maxCombo: 0, creatures: 0, bosses: 0, played: 0 } };
+    missionKey = '';
+  }
+  const mission = id => MISSION_POOL.find(m => m.id === id);
+  const missionDone = m => (state.daily.c[m.key] || 0) >= m.n;
+  const readyMissions = () => state.daily ? state.daily.missions.filter(id => !state.daily.claimed.includes(id) && missionDone(mission(id))).length : 0;
+  function dailyAdd(key, v = 1) {
+    if (!state.daily) return;
+    if (key === 'maxCombo') state.daily.c.maxCombo = Math.max(state.daily.c.maxCombo, v);
+    else state.daily.c[key] = (state.daily.c[key] || 0) + v;
+  }
+
+  // ================= Sauvegarde =================
   function save() {
     try { state.last = Date.now(); localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
   }
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) return Object.assign(fresh(), JSON.parse(raw));
+      if (raw) return normalize(JSON.parse(raw));
     } catch (e) {}
     return null;
   }
 
-  // ---------- Effets ----------
-  function toast(msg, gold) {
+  // ================= Effets visuels =================
+  function toast(msg, kind) {
     const t = document.createElement('div');
-    t.className = 'toast' + (gold ? ' gold' : '');
+    t.className = 'toast' + (kind ? ' ' + kind : '');
     t.textContent = msg;
     $('toasts').appendChild(t);
+    while ($('toasts').children.length > 4) $('toasts').firstChild.remove();
     setTimeout(() => t.remove(), 3900);
   }
-  function floater(x, y, text, gold) {
+  function floater(x, y, text, kind) {
     const f = document.createElement('div');
-    f.className = 'float' + (gold ? ' gold' : '');
+    f.className = 'float' + (kind ? ' ' + kind : '');
     f.textContent = text;
     f.style.left = (x + rand(-18, 18)) + 'px';
     f.style.top = (y + rand(-10, 10)) + 'px';
     document.body.appendChild(f);
     setTimeout(() => f.remove(), 950);
   }
+  function pointOf(e, el) {
+    if (e && (e.clientX || e.clientY)) return [e.clientX, e.clientY];
+    const r = el.getBoundingClientRect();
+    return [r.left + r.width / 2, r.top + r.height / 2];
+  }
 
-  // ---------- Double hélice ----------
+  // ================= Double hélice =================
   const cv = $('helix'), ctx = cv.getContext('2d');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let W = 0, H = 0, phase = 0, lastDraw = 0;
+  const skinObj = () => SKINS.find(k => k.id === state.skin) || SKINS[0];
+  function applySkin() {
+    const k = skinObj(), cell = $('cell');
+    cell.style.setProperty('--c1', k.bg[0]);
+    cell.style.setProperty('--c2', k.bg[1]);
+    cell.style.setProperty('--c3', k.bg[2]);
+    drawHelix(0, 0, true);
+  }
   function sizeCanvas() {
     const r = cv.getBoundingClientRect();
+    if (!r.width) return;
     const d = window.devicePixelRatio || 1;
     W = r.width; H = r.height;
     cv.width = Math.max(1, Math.round(W * d));
@@ -473,13 +891,15 @@
       if (now - lastDraw < 1000) return;
       lastDraw = now;
     }
-    phase += dt * (0.9 + Math.log10(1 + c) * 0.4);
+    const k = skinObj();
+    phase += dt * (0.9 + Math.log10(1 + c) * 0.4 + Math.min(combo, COMBO_CAP) * 0.03);
     ctx.clearRect(0, 0, W, H);
     ctx.save();
     ctx.translate(W / 2, H / 2);
     ctx.rotate(-0.4);
     const R = W * 0.2, step = W / 20;
-    for (let y = -H * 0.62; y <= H * 0.62; y += step) {
+    let i = 0;
+    for (let y = -H * 0.62; y <= H * 0.62; y += step, i++) {
       const p = (y / W) * 9.5 + phase * 2;
       const s = Math.sin(p), z = Math.cos(p);
       const x1 = s * R, x2 = -s * R;
@@ -488,8 +908,10 @@
       ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
       const f1 = (z + 1) / 2, f2 = 1 - f1;
-      dot(x1, y, 2.5 + 3.5 * f1, '#ff5c8a', 0.35 + 0.65 * f1);
-      dot(x2, y, 2.5 + 3.5 * f2, '#55e6c6', 0.35 + 0.65 * f2);
+      const ca = k.rainbow ? `hsl(${(i * 18 + phase * 90) % 360} 90% 65%)` : k.a;
+      const cb = k.rainbow ? `hsl(${(i * 18 + phase * 90 + 180) % 360} 90% 65%)` : k.b;
+      dot(x1, y, 2.5 + 3.5 * f1, ca, 0.35 + 0.65 * f1);
+      dot(x2, y, 2.5 + 3.5 * f2, cb, 0.35 + 0.65 * f2);
     }
     ctx.restore();
     ctx.globalAlpha = 1;
@@ -497,7 +919,32 @@
   if ('ResizeObserver' in window) new ResizeObserver(sizeCanvas).observe(cv);
   else addEventListener('resize', sizeCanvas);
 
-  // ---------- Boutique ----------
+  // ================= Clics et combo =================
+  function registerClick() {
+    const now = performance.now();
+    combo = now - lastClickAt < COMBO_WINDOW ? combo + 1 : 1;
+    lastClickAt = now;
+    state.clicks++;
+    dailyAdd('clicks');
+    if (combo > state.stats.maxCombo) state.stats.maxCombo = combo;
+    dailyAdd('maxCombo', combo);
+  }
+  const cell = $('cell');
+  cell.addEventListener('click', e => {
+    registerClick();
+    const v = clickValue();
+    gain(v);
+    const [x, y] = pointOf(e, cell);
+    floater(x, y, '+' + fmt(v, true));
+    cell.classList.remove('pop');
+    void cell.offsetWidth;
+    cell.classList.add('pop');
+    setTimeout(() => cell.classList.remove('pop'), 90);
+    SFX.click(combo);
+    updateTop();
+  });
+
+  // ================= Boutique : équipement et améliorations =================
   const bEls = {};
   function buildShop() {
     const wrap = $('buildings');
@@ -520,26 +967,31 @@
     }
   }
   function buyBuilding(b) {
-    const p = priceOf(b);
+    const n = state.buyAmt, p = priceOf(b, n);
     if (state.adn < p) return;
     state.adn -= p;
-    state.owned[b.id] = (state.owned[b.id] || 0) + 1;
-    updateShop();
-    updateTop();
+    state.owned[b.id] = (state.owned[b.id] || 0) + n;
+    dailyAdd('buys', n);
+    SFX.buy();
+    refresh();
   }
   function buyUpgrade(u) {
     if (has(u.id) || state.adn < u.cost) return;
     state.adn -= u.cost;
     state.ups.push(u.id);
     toast(u.name + ' : ' + u.desc);
+    SFX.buy();
     upKey = '';
-    updateShop();
-    updateTop();
+    refresh();
+  }
+  for (const btn of document.querySelectorAll('.buyamt button')) {
+    btn.addEventListener('click', () => { state.buyAmt = Number(btn.dataset.amt); refresh(); });
   }
 
   let upKey = '';
-  function updateShop() {
+  function updateLabo() {
     const m = mults();
+    for (const btn of document.querySelectorAll('.buyamt button')) btn.setAttribute('aria-pressed', String(Number(btn.dataset.amt) === state.buyAmt));
     let shownLocked = false;
     for (const b of BUILDINGS) {
       const e = bEls[b.id];
@@ -552,14 +1004,14 @@
       e.el.classList.toggle('locked', !unlocked);
       e.name.textContent = unlocked ? b.name : '???';
       e.desc.textContent = unlocked ? b.desc : 'Continue d’extraire pour débloquer.';
-      e.price.textContent = fmt(p) + ' ADN';
+      e.price.textContent = (state.buyAmt > 1 ? '×' + state.buyAmt + ' : ' : '') + fmt(p) + ' ADN';
       e.rate.textContent = unlocked ? '+' + fmt(b.rate * m.prod, true) + '/s chacun' : '';
       e.own.textContent = owned || '';
       e.el.disabled = !unlocked || state.adn < p;
     }
 
     const avail = UPGRADES.filter(u => !has(u.id) && state.total >= u.cost * 0.5).slice(0, 4);
-    const key = avail.map(u => u.id).join(',');
+    const key = avail.map(u => u.id).join(',') + '|' + state.ups.length;
     const wrap = $('upgrades');
     if (key !== upKey) {
       upKey = key;
@@ -567,9 +1019,7 @@
       if (!avail.length) {
         const p = document.createElement('p');
         p.className = 'empty';
-        p.textContent = state.ups.length === UPGRADES.length
-          ? 'Tout est acheté. Respect.'
-          : 'Rien pour l’instant. Continue d’extraire…';
+        p.textContent = state.ups.length === UPGRADES.length ? 'Tout est acheté. Respect.' : 'Rien pour l’instant. Continue d’extraire…';
         wrap.appendChild(p);
       }
       for (const u of avail) {
@@ -591,9 +1041,201 @@
     }
   }
 
+  // ================= Créatures =================
+  const crEls = {};
+  function buildCreatures() {
+    const wrap = $('creatures');
+    wrap.textContent = '';
+    for (const c of CREATURES) {
+      const el = document.createElement('div');
+      el.className = 'cr';
+      el.innerHTML = '<svg viewBox="0 0 64 64" aria-hidden="true">' + CREATURE_ART[c.id] + '</svg><span class="count"></span><span class="name"></span><span class="desc"></span><button type="button" class="action full"></button>';
+      const btn = el.querySelector('button');
+      btn.addEventListener('click', () => craft(c));
+      wrap.appendChild(el);
+      crEls[c.id] = { el, btn, name: el.querySelector('.name'), desc: el.querySelector('.desc'), count: el.querySelector('.count') };
+    }
+  }
+  function craft(c) {
+    const n = state.creatures[c.id] || 0, p = crPrice(c);
+    if (n >= c.max || state.adn < p) return;
+    state.adn -= p;
+    state.creatures[c.id] = n + 1;
+    state.stats.creatures++;
+    dailyAdd('creatures');
+    SFX.craft();
+    toast(c.name + (n ? ' ×' + (n + 1) : '') + ' est né !');
+    refresh();
+  }
+  function updateCreatures() {
+    for (const c of CREATURES) {
+      const e = crEls[c.id], n = state.creatures[c.id] || 0, p = crPrice(c);
+      const unlocked = n > 0 || state.total >= c.cost * 0.3;
+      e.el.classList.toggle('locked', !unlocked);
+      e.name.textContent = unlocked ? c.name : '???';
+      e.desc.textContent = unlocked ? c.desc : 'Créature inconnue. Extrais plus d’ADN.';
+      e.count.textContent = n ? '×' + n : '';
+      if (n >= c.max) { e.btn.textContent = 'Maximum atteint'; e.btn.disabled = true; }
+      else {
+        e.btn.innerHTML = 'Fabriquer · <span class="price"></span>';
+        e.btn.querySelector('.price').textContent = fmt(p) + ' ADN';
+        e.btn.disabled = !unlocked || state.adn < p;
+      }
+    }
+  }
+
+  // ================= Missions =================
+  let missionKey = '';
+  function updateMissions() {
+    const wrap = $('missions');
+    const d = state.daily;
+    const key = d.date + d.missions.join() + d.claimed.join() + d.missions.map(id => missionDone(mission(id)) ? 1 : 0).join('');
+    if (key !== missionKey) {
+      missionKey = key;
+      wrap.textContent = '';
+      for (const id of d.missions) {
+        const m = mission(id);
+        const el = document.createElement('div');
+        el.className = 'mission';
+        el.dataset.id = id;
+        el.innerHTML = '<div><span class="txt"></span><span class="reward"></span></div><button type="button" class="action gold"></button><div class="prog"><div class="bar"><i></i></div><span class="num"></span></div>';
+        el.querySelector('.txt').textContent = m.text(m.n);
+        el.querySelector('button').addEventListener('click', () => claim(id));
+        wrap.appendChild(el);
+      }
+      const foot = document.createElement('p');
+      foot.className = 'intro';
+      foot.textContent = 'Nouvelles missions demain. Missions terminées au total : ' + state.stats.missions + '.';
+      wrap.appendChild(foot);
+    }
+    for (const el of wrap.querySelectorAll('.mission')) {
+      const m = mission(el.dataset.id);
+      const v = Math.min(state.daily.c[m.key] || 0, m.n);
+      const done = v >= m.n, claimed = d.claimed.includes(m.id);
+      el.classList.toggle('done', done && !claimed);
+      el.classList.toggle('claimed', claimed);
+      el.querySelector('.bar i').style.width = (v / m.n * 100) + '%';
+      el.querySelector('.num').textContent = (m.key === 'played' ? fmtTime(v) + ' / ' + fmtTime(m.n) : fmtInt(v) + ' / ' + fmtInt(m.n));
+      el.querySelector('.reward').textContent = claimed ? 'Récompense récupérée' : 'Récompense : ' + fmt(rewardBase()) + ' ADN';
+      const btn = el.querySelector('button');
+      btn.textContent = claimed ? 'Fait' : 'Récupérer';
+      btn.disabled = !done || claimed;
+    }
+  }
+  function claim(id) {
+    const m = mission(id), d = state.daily;
+    if (d.claimed.includes(id) || !missionDone(m)) return;
+    const r = rewardBase();
+    gain(r);
+    d.claimed.push(id);
+    state.stats.missions++;
+    SFX.gold();
+    toast('Mission terminée : +' + fmt(r) + ' ADN', 'gold');
+    missionKey = '';
+    refresh();
+  }
+
+  // ================= Succès =================
+  let achKey = '';
+  function updateAch() {
+    const key = state.ach.join();
+    if (key === achKey) return;
+    achKey = key;
+    $('achSummary').textContent = state.ach.length + ' / ' + ACH.length + ' succès débloqués · +' + Math.round(state.ach.length * ACH_BONUS * 100) + ' % de production (chaque succès donne +2 %).';
+    const wrap = $('achList');
+    wrap.textContent = '';
+    for (const [id, name, desc] of ACH) {
+      const got = state.ach.includes(id);
+      const el = document.createElement('div');
+      el.className = 'ach' + (got ? ' got' : '');
+      el.innerHTML = '<b></b><span></span>';
+      el.children[0].textContent = got ? name : '???';
+      el.children[1].textContent = desc;
+      wrap.appendChild(el);
+    }
+  }
+  function checkAch() {
+    for (const [id, name, , test] of ACH) {
+      if (!state.ach.includes(id) && test(state)) {
+        state.ach.push(id);
+        toast('Succès débloqué : ' + name + ' (+2 % de production)');
+        SFX.ach();
+      }
+    }
+  }
+
+  // ================= Skins =================
+  let skinKey = '';
+  function updateSkins() {
+    const unlocked = SKINS.map(k => k.test(state) ? 1 : 0).join('');
+    const key = unlocked + state.skin;
+    if (key === skinKey) return;
+    skinKey = key;
+    const wrap = $('skinList');
+    wrap.textContent = '';
+    for (const k of SKINS) {
+      const ok = k.test(state), on = state.skin === k.id;
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'skin' + (on ? ' on' : '');
+      el.disabled = !ok;
+      const sw = k.rainbow
+        ? 'conic-gradient(from 0deg, #ff5c8a, #ffc94d, #b6ff3b, #55e6c6, #9ad7ff, #a78bfa, #ff5c8a)'
+        : `radial-gradient(circle at 36% 30%, ${k.bg[0]}, ${k.bg[1]} 58%, ${k.bg[2]})`;
+      el.innerHTML = '<span class="swatch"><i></i><i></i></span><b></b><span></span>';
+      el.querySelector('.swatch').style.background = sw;
+      el.querySelectorAll('.swatch i')[0].style.background = k.a;
+      el.querySelectorAll('.swatch i')[1].style.background = k.b;
+      el.querySelector('b').textContent = k.name;
+      el.querySelector('span:last-child').textContent = on ? 'Équipé' : ok ? 'Choisir' : k.need;
+      el.addEventListener('click', () => {
+        if (!k.test(state) || state.skin === k.id) return;
+        state.skin = k.id;
+        state.stats.skinChanged++;
+        applySkin();
+        SFX.buy();
+        refresh();
+      });
+      wrap.appendChild(el);
+    }
+  }
+
+  // ================= Onglets =================
+  const TABS = ['labo', 'creatures', 'missions', 'succes', 'skins'];
+  function showTab(t) {
+    if (!TABS.includes(t)) t = 'labo';
+    state.tab = t;
+    for (const id of TABS) {
+      const on = id === t;
+      $('t-' + id).setAttribute('aria-selected', String(on));
+      $('p-' + id).hidden = !on;
+    }
+    refresh();
+  }
+  for (const id of TABS) $('t-' + id).addEventListener('click', () => showTab(id));
+  function updateBadges() {
+    const n = readyMissions();
+    $('t-missions').innerHTML = 'Missions' + (n ? '<span class="badge">' + n + '</span>' : '');
+  }
+
+  function refresh() {
+    ensureDaily();
+    if (state.tab === 'labo') updateLabo();
+    else if (state.tab === 'creatures') updateCreatures();
+    else if (state.tab === 'missions') updateMissions();
+    else if (state.tab === 'succes') updateAch();
+    else if (state.tab === 'skins') updateSkins();
+    updateBadges();
+    updateBoss();
+    updateTop();
+  }
+
+  // ================= Haut de page =================
   function updateTop() {
     $('adn').textContent = fmt(state.adn);
-    $('cps').textContent = fmt(cps(), true) + ' / s';
+    const c = cps();
+    $('cps').textContent = fmt(c, true) + ' / s' + (eventFactor() < 1 ? ' (perturbé)' : '');
+    $('cps').classList.toggle('low', eventFactor() < 1);
     $('perclick').textContent = '+' + fmt(clickValue(), true);
     $('sTotal').textContent = fmt(state.total);
     $('sClicks').textContent = fmt(state.clicks);
@@ -603,18 +1245,28 @@
       fz.hidden = false;
       fz.textContent = 'Mutation ! Tout ×' + FRENZY_MULT + ' · ' + Math.ceil((frenzyUntil - Date.now()) / 1000) + ' s';
     } else fz.hidden = true;
+    const bn = $('eventBanner');
+    if (ev) {
+      const left = Math.ceil((ev.until - Date.now()) / 1000) + ' s';
+      bn.hidden = false;
+      bn.className = 'banner ev-' + ev.type;
+      bn.textContent = ev.type === 'virus' ? `Attaque de virus ! Encore ${virusCount} à détruire · ${left}`
+        : ev.type === 'outage' ? `Panne de courant ! Production à l’arrêt, clics ×3 · ${left}`
+        : `Averse de nucléotides ! Attrape les billes · ${left}`;
+    } else bn.hidden = true;
+  }
+  function updateCombo() {
+    const el = $('combo');
+    const since = performance.now() - lastClickAt;
+    if (combo && since > COMBO_WINDOW) combo = 0;
+    if (combo >= 5) {
+      el.classList.add('on');
+      $('comboText').textContent = 'Combo ' + combo + ' · ×' + comboMult().toFixed(2).replace('.', ',').replace(/,?0+$/, '');
+      $('comboBar').style.width = Math.max(0, 100 - since / COMBO_WINDOW * 100) + '%';
+    } else el.classList.remove('on');
   }
 
-  function checkAch() {
-    for (const [id, test, msg] of ACH) {
-      if (!state.ach.includes(id) && test(state)) {
-        state.ach.push(id);
-        toast(msg);
-      }
-    }
-  }
-
-  // ---------- Mutation dorée ----------
+  // ================= Mutation dorée =================
   const golden = $('golden');
   function goldenTick() {
     const now = Date.now();
@@ -626,64 +1278,279 @@
       goldenHideAt = now + 9000;
     } else if (!golden.hidden && now >= goldenHideAt) {
       golden.hidden = true;
-      nextGolden = now + rand(40, 90) * 1000;
+      scheduleGolden();
     }
+  }
+  function scheduleGolden() {
+    nextGolden = Date.now() + rand(40, 90) * 1000 / (1 + crVal('gold'));
   }
   golden.addEventListener('click', e => {
     golden.hidden = true;
-    nextGolden = Date.now() + rand(40, 90) * 1000;
-    const r = golden.getBoundingClientRect();
-    const x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
-    if (Math.random() < 0.5 && baseCps() > 0) {
+    scheduleGolden();
+    const [x, y] = pointOf(e, golden);
+    state.stats.goldens++;
+    dailyAdd('goldens');
+    SFX.gold();
+    if (Math.random() < 0.5 && rawCps() > 0) {
       frenzyUntil = Date.now() + 15000;
-      toast('Mutation dorée ! Tout est ×' + FRENZY_MULT + ' pendant 15 s', true);
-      floater(x, y, '×' + FRENZY_MULT + ' !', true);
+      toast('Mutation dorée ! Tout est ×' + FRENZY_MULT + ' pendant 15 s', 'gold');
+      floater(x, y, '×' + FRENZY_MULT + ' !', 'gold');
     } else {
-      const gain = Math.max(25, baseCps() * 60 + clickValue() * 15);
-      state.adn += gain; state.total += gain;
-      toast('Jackpot génétique : +' + fmt(gain) + ' ADN', true);
-      floater(x, y, '+' + fmt(gain), true);
+      const g = Math.max(25, rawCps() * 60 + clickValue() * 15);
+      gain(g);
+      toast('Jackpot génétique : +' + fmt(g) + ' ADN', 'gold');
+      floater(x, y, '+' + fmt(g), 'gold');
     }
-    if (!state.ach.includes('gold')) { state.ach.push('gold'); }
-    updateTop();
+    refresh();
   });
 
-  // ---------- Clic principal ----------
-  const cell = $('cell');
-  cell.addEventListener('click', e => {
-    const v = clickValue();
-    state.adn += v; state.total += v; state.clicks++;
-    let x = e.clientX, y = e.clientY;
-    if (!x && !y) { const r = cell.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top + r.height / 2; }
-    floater(x, y, '+' + fmt(v, true));
-    cell.classList.remove('pop');
-    void cell.offsetWidth;
-    cell.classList.add('pop');
-    setTimeout(() => cell.classList.remove('pop'), 90);
-    updateTop();
+  // ================= Événements aléatoires =================
+  const VIRUS_SVG = '<svg viewBox="0 0 40 40" aria-hidden="true"><g stroke="#b6ff3b" stroke-width="3" stroke-linecap="round"><path d="M20 2v7M20 31v7M2 20h7M31 20h7M7 7l5 5M28 28l5 5M33 7l-5 5M12 28l-5 5"/></g><circle cx="20" cy="20" r="11" fill="#7c3aed"/><circle cx="16" cy="18" r="2.5" fill="#b6ff3b"/><circle cx="24" cy="18" r="2.5" fill="#b6ff3b"/><path d="M15 25q5-3 10 0" stroke="#b6ff3b" stroke-width="2" fill="none"/></svg>';
+  function eventTick() {
+    const now = Date.now();
+    if (!ev && !boss && now >= nextEvent && state.total >= 200) startEvent(pick(['virus', 'outage', 'shower']));
+    else if (ev && now >= ev.until) endEvent(false);
+  }
+  function startEvent(type) {
+    const now = Date.now();
+    if (type === 'virus') {
+      ev = { type, until: now + 20000 };
+      spawnViruses(3 + Math.floor(rand(0, 4)));
+      toast('Attaque de virus ! Clique-les : ils divisent ta production par 2.', 'bad');
+      SFX.virus();
+    } else if (type === 'outage') {
+      ev = { type, until: now + 10000 };
+      $('dim').hidden = false;
+      toast('Panne de courant ! Plus de production, mais tes clics valent ×3.', 'bad');
+      SFX.outage();
+    } else {
+      ev = { type, until: now + 9000 };
+      spawnShower(10);
+      toast('Averse de nucléotides ! Attrape les billes qui tombent.', 'gold');
+      SFX.orb();
+    }
+    refresh();
+  }
+  function endEvent(cleared) {
+    if (!ev) return;
+    if (ev.type === 'virus') {
+      const left = document.querySelectorAll('.virus');
+      if (!cleared && left.length) {
+        const lost = Math.floor(state.adn * 0.03 * left.length);
+        state.adn -= lost;
+        toast(left.length + ' virus se sont enfuis avec ' + fmt(lost) + ' ADN', 'bad');
+      }
+      left.forEach(v => v.remove());
+      virusCount = 0;
+    } else if (ev.type === 'outage') {
+      $('dim').hidden = true;
+      toast('Courant rétabli, le labo repart.');
+    } else {
+      document.querySelectorAll('.orb').forEach(o => o.remove());
+    }
+    ev = null;
+    nextEvent = Date.now() + rand(70, 150) * 1000;
+    refresh();
+  }
+  function spawnViruses(n) {
+    const lab = $('lab'), lr = lab.getBoundingClientRect();
+    const target = (boss ? $('boss') : cell).getBoundingClientRect();
+    const cx = target.left - lr.left + target.width / 2, cy = target.top - lr.top + target.height / 2;
+    const R = target.width / 2 + 10;
+    virusCount = n;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + rand(-0.3, 0.3);
+      const v = document.createElement('button');
+      v.type = 'button';
+      v.className = 'virus';
+      v.setAttribute('aria-label', 'Détruire le virus');
+      v.innerHTML = VIRUS_SVG;
+      v.style.left = Math.min(lr.width - 24, Math.max(24, cx + Math.cos(a) * R)) + 'px';
+      v.style.top = Math.max(24, cy + Math.sin(a) * R) + 'px';
+      v.addEventListener('click', e => {
+        const [x, y] = pointOf(e, v);
+        v.remove();
+        virusCount = document.querySelectorAll('.virus').length;
+        const g = Math.max(5, rawCps() * 3);
+        gain(g);
+        state.stats.viruses++;
+        dailyAdd('viruses');
+        floater(x, y, '+' + fmt(g), 'gold');
+        SFX.pop();
+        if (!virusCount) { toast('Tous les virus sont détruits !', 'gold'); endEvent(true); }
+        else updateTop();
+      });
+      lab.appendChild(v);
+    }
+  }
+  function spawnShower(n) {
+    for (let i = 0; i < n; i++) {
+      setTimeout(() => {
+        if (!ev || ev.type !== 'shower') return;
+        const o = document.createElement('button');
+        o.type = 'button';
+        o.className = 'orb';
+        o.setAttribute('aria-label', 'Attraper la bille d’ADN');
+        o.style.left = rand(16, Math.max(17, innerWidth - 52)) + 'px';
+        o.style.setProperty('--dur', rand(3.5, 5.5).toFixed(2) + 's');
+        o.addEventListener('animationend', () => o.remove());
+        o.addEventListener('click', e => {
+          const [x, y] = pointOf(e, o);
+          o.remove();
+          const g = Math.max(10, rawCps() * 4 + mults().click * 5);
+          gain(g);
+          floater(x, y, '+' + fmt(g), 'gold');
+          SFX.orb();
+          updateTop();
+        });
+        document.body.appendChild(o);
+      }, i * 450);
+    }
+  }
+
+  // ================= Boss =================
+  const bossHpFor = lvl => 100 + (lvl - 1) * 60;
+  function bossSvg() {
+    let spikes = '';
+    for (let i = 0; i < 14; i++) {
+      const a = i / 14 * Math.PI * 2, b = a + 0.16, c = a - 0.16;
+      const p = (r, t) => (100 + Math.cos(t) * r).toFixed(1) + ',' + (100 + Math.sin(t) * r).toFixed(1);
+      spikes += `<polygon points="${p(74, c)} ${p(96, a)} ${p(74, b)}"/>`;
+    }
+    return '<svg viewBox="0 0 200 200" aria-hidden="true"><defs><radialGradient id="bossg" cx="40%" cy="35%"><stop offset="0" stop-color="#ff8fab"/><stop offset=".6" stop-color="#c81e4a"/><stop offset="1" stop-color="#5a0a22"/></radialGradient></defs>'
+      + '<g fill="#7a0f30">' + spikes + '</g>'
+      + '<circle cx="100" cy="100" r="78" fill="url(#bossg)"/>'
+      + '<path d="M58 78l30 12M142 78l-30 12" stroke="#1d0710" stroke-width="7" stroke-linecap="round"/>'
+      + '<circle cx="76" cy="98" r="12" fill="#fff"/><circle cx="124" cy="98" r="12" fill="#fff"/>'
+      + '<circle cx="78" cy="100" r="6" fill="#1d0710"/><circle cx="122" cy="100" r="6" fill="#1d0710"/>'
+      + '<path d="M64 132q36-24 72 0q-36 16-72 0z" fill="#1d0710"/>'
+      + '<path d="M74 128l5 7 5-9 5 9 6-10 5 10 6-10 5 9 5-9 5 7" fill="#fff"/></svg>';
+  }
+  $('boss').innerHTML = bossSvg();
+  function updateBoss() {
+    const btn = $('bossBtn'), info = $('bossInfo'), now = Date.now();
+    const next = state.bossLevel + 1;
+    $('bossCardTitle').textContent = 'Boss · Cellule géante niv. ' + next;
+    if (boss) { info.textContent = 'Combat en cours ! Clique le boss.'; btn.disabled = true; btn.textContent = 'En combat'; return; }
+    btn.textContent = 'Combattre';
+    if (state.total < BOSS_UNLOCK) { info.textContent = 'Se débloque à ' + fmtInt(BOSS_UNLOCK) + ' ADN extraits.'; btn.disabled = true; }
+    else if (now < state.bossReadyAt) { info.textContent = 'Il reprend des forces… retour dans ' + fmtClock(state.bossReadyAt - now) + '.'; btn.disabled = true; }
+    else if (ev) { info.textContent = 'Attends la fin de l’événement en cours.'; btn.disabled = true; }
+    else { info.textContent = fmtInt(bossHpFor(next)) + ' PV, 30 s pour le battre. Les combos font mal.'; btn.disabled = false; }
+  }
+  $('bossBtn').addEventListener('click', () => {
+    if (boss || ev || state.total < BOSS_UNLOCK || Date.now() < state.bossReadyAt) return;
+    const level = state.bossLevel + 1;
+    const hp = bossHpFor(level);
+    boss = { level, hp, max: hp, until: Date.now() + 30000 };
+    $('cellwrap').hidden = true;
+    $('hint').hidden = true;
+    $('bosswrap').hidden = false;
+    $('bossName').textContent = 'Cellule géante · niv. ' + level;
+    combo = 0;
+    SFX.virus();
+    toast('Le boss arrive ! Clique-le le plus vite possible.', 'bad');
+    updateBossFight();
+    refresh();
+  });
+  $('boss').addEventListener('click', e => {
+    if (!boss) return;
+    registerClick();
+    const dmg = comboMult() * (1 + crVal('boss'));
+    boss.hp -= dmg;
+    const [x, y] = pointOf(e, $('boss'));
+    floater(x, y, '-' + fmt(dmg, true), 'hurt');
+    const b = $('boss');
+    b.classList.remove('hit');
+    void b.offsetWidth;
+    b.classList.add('hit');
+    SFX.hit();
+    if (boss.hp <= 0) winBoss();
+    else updateBossFight();
+  });
+  function updateBossFight() {
+    if (!boss) return;
+    $('bossHp').style.width = Math.max(0, boss.hp / boss.max * 100) + '%';
+    $('bossTimer').textContent = Math.max(0, Math.ceil((boss.until - Date.now()) / 1000)) + ' s';
+  }
+  function closeBoss() {
+    boss = null;
+    $('bosswrap').hidden = true;
+    $('cellwrap').hidden = false;
+    $('hint').hidden = false;
+    sizeCanvas();
+  }
+  function winBoss() {
+    const lvl = boss.level;
+    const r = Math.max(5000, rawCps() * 600) * (1 + (lvl - 1) * 0.5);
+    gain(r);
+    state.bossLevel = Math.max(state.bossLevel, lvl);
+    state.stats.bosses++;
+    dailyAdd('bosses');
+    state.bossReadyAt = Date.now() + 180000;
+    closeBoss();
+    SFX.win();
+    toast('Boss niveau ' + lvl + ' vaincu ! +' + fmt(r) + ' ADN', 'gold');
+    refresh();
+  }
+  function loseBoss() {
+    state.bossReadyAt = Date.now() + 60000;
+    closeBoss();
+    SFX.lose();
+    toast('Le boss s’est échappé… Réessaie dans 1 minute.', 'bad');
+    refresh();
+  }
+
+  // ================= Son on/off =================
+  function updateSoundBtn() {
+    const b = $('soundBtn');
+    b.textContent = state.muted ? 'Son : coupé' : 'Son : activé';
+    b.setAttribute('aria-pressed', String(!state.muted));
+  }
+  $('soundBtn').addEventListener('click', () => {
+    state.muted = !state.muted;
+    updateSoundBtn();
+    if (!state.muted) SFX.buy();
+    save();
   });
 
-  // ---------- Recommencer ----------
+  // ================= Recommencer =================
   $('resetBtn').addEventListener('click', () => { $('confirm').hidden = false; $('resetBtn').hidden = true; });
   $('no').addEventListener('click', () => { $('confirm').hidden = true; $('resetBtn').hidden = false; });
   $('yes').addEventListener('click', () => {
-    state = fresh(); frenzyUntil = 0; upKey = '';
+    const muted = state.muted;
+    if (ev) endEvent(true);
+    if (boss) closeBoss();
+    state = fresh();
+    state.muted = muted;
+    frenzyUntil = 0; combo = 0; upKey = ''; missionKey = ''; achKey = ''; skinKey = '';
+    golden.hidden = true;
+    scheduleGolden();
     $('confirm').hidden = true; $('resetBtn').hidden = false;
-    save(); updateShop(); updateTop();
+    applySkin();
+    save();
+    showTab('labo');
     toast('Nouveau labo, nouvelle vie.');
   });
 
-  // ---------- Boucle ----------
+  // ================= Boucle principale =================
   let lastT = performance.now(), acc = 0, saveAcc = 0, hiddenAt = 0;
   function frame(t) {
     const dt = Math.min(1, Math.max(0, (t - lastT) / 1000));
     lastT = t;
     const c = cps();
-    state.adn += c * dt; state.total += c * dt; state.played += dt;
+    gain(c * dt);
+    state.played += dt;
+    dailyAdd('played', dt);
     drawHelix(dt, c);
+    updateCombo();
     updateTop();
+    if (boss) {
+      if (Date.now() >= boss.until) loseBoss();
+      else updateBossFight();
+    }
     acc += dt; saveAcc += dt;
-    if (acc > 0.2) { acc = 0; updateShop(); checkAch(); goldenTick(); }
+    if (acc > 0.25) { acc = 0; checkAch(); goldenTick(); eventTick(); refresh(); }
     if (saveAcc > 5) { saveAcc = 0; save(); }
     requestAnimationFrame(frame);
   }
@@ -691,34 +1558,35 @@
     if (document.hidden) { hiddenAt = Date.now(); save(); }
     else if (hiddenAt) {
       const sec = Math.min((Date.now() - hiddenAt) / 1000, 8 * 3600);
-      const gain = sec * baseCps();
-      state.adn += gain; state.total += gain;
+      gain(sec * rawCps());
       hiddenAt = 0; lastT = performance.now();
     }
   });
   addEventListener('pagehide', save);
 
   function start(data) {
-    const restored = data && data.state ? Object.assign(fresh(), data.state) : null;
+    const restored = data && data.state ? normalize(data.state) : null;
     const saved = restored || load();
     if (saved) {
       state = saved;
       if (!restored) {
         const sec = Math.min((Date.now() - (state.last || Date.now())) / 1000, 8 * 3600);
-        const gain = sec * baseCps() * 0.5;
-        if (sec > 30 && gain >= 1) {
-          state.adn += gain; state.total += gain;
-          setTimeout(() => toast('Pendant ton absence, le labo a produit +' + fmt(gain) + ' ADN'), 400);
+        const g = sec * rawCps() * 0.5;
+        if (sec > 30 && g >= 1) {
+          gain(g);
+          setTimeout(() => toast('Pendant ton absence, le labo a produit +' + fmt(g) + ' ADN'), 400);
         }
       }
     } else {
-      // Petite démo : l’écran d’accueil montre déjà la boutique en action
       setTimeout(() => toast('Clique la cellule pour commencer !'), 400);
     }
+    ensureDaily();
     buildShop();
+    buildCreatures();
+    applySkin();
     sizeCanvas();
-    updateShop();
-    updateTop();
+    updateSoundBtn();
+    showTab(state.tab);
     requestAnimationFrame(t => { lastT = t; requestAnimationFrame(frame); });
   }
 
