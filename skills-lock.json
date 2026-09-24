@@ -7,6 +7,12 @@
       "skillPath": "scientific-skills/aeon/SKILL.md",
       "computedHash": "c26b247eebaf022d6828ebdc7b85286068e5d0cd13163936e4511dc74ec23aae"
     },
+    "emil-design-eng": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/emil-design-eng/SKILL.md",
+      "computedHash": "51f2537e04d15911b41d78e2de24c36a0e26d41beae15e82a954fe5496a5eda9"
+    },
     "karpathy-guidelines": {
       "source": "multica-ai/andrej-karpathy-skills",
       "sourceType": "github",
