@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "skills": {
+    "aeon": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/aeon/SKILL.md",
+      "computedHash": "c26b247eebaf022d6828ebdc7b85286068e5d0cd13163936e4511dc74ec23aae"
+    },
+    "karpathy-guidelines": {
+      "source": "multica-ai/andrej-karpathy-skills",
+      "sourceType": "github",
+      "skillPath": "skills/karpathy-guidelines/SKILL.md",
+      "computedHash": "41e8ca055bbde13d240776a14a076a59614057200340c243130a76ba4e64cac8"
+    },
+    "mcp-builder": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/mcp-builder/SKILL.md",
+      "computedHash": "826e46adf81e1372282e205c34e1a2ee876e72148007726e4a2512599d2fef7b"
+    },
+    "modal": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/modal/SKILL.md",
+      "computedHash": "7966885bf7b091be5c5744be1f75d9b83e1b084b4cd81b44b4b6a4a2ec712c8c"
+    },
+    "optimize-for-gpu": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/optimize-for-gpu/SKILL.md",
+      "computedHash": "07b9fef9f411bae2d11c882d8238c67e9ffa4a5fc9e917704b862a73e91afd54"
+    },
+    "pufferlib": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/pufferlib/SKILL.md",
+      "computedHash": "cfe81d43a39fd8b19e841704ae791a0120a8fab9fc05fd0c67c4f2812120bd80"
+    },
+    "pymc": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/pymc/SKILL.md",
+      "computedHash": "067cea490b7cb65ce029ffd57f7e0500586521036ab3529123416aea23a726a3"
+    },
+    "pymoo": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/pymoo/SKILL.md",
+      "computedHash": "d4866732a9e077c2be4f0b336515df7633913e5d406d17326f3f844bd5453297"
+    },
+    "pytorch-lightning": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/pytorch-lightning/SKILL.md",
+      "computedHash": "8753b2a85f2822c4a13a641c458176971c32a500f12fee521a682dc8c742cb33"
+    },
+    "scikit-learn": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/scikit-learn/SKILL.md",
+      "computedHash": "89b07aa7533ac79e8cf39e956135f9d319a6e9fee6e9ce374910df0dc03e0d97"
+    },
+    "scikit-survival": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/scikit-survival/SKILL.md",
+      "computedHash": "d9d1968cd82c6f61406033cac64cc746b58394c555ae0e8d4e7aacc185c239a6"
+    },
+    "shap": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/shap/SKILL.md",
+      "computedHash": "57021b3a6767badcffab138127ae48257a43a002208c2484628e0fcc07b2c155"
+    },
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-creator/SKILL.md",
+      "computedHash": "5ea13a6d9f0d4bb694405d79acd00cadec0d21bb138c4dd10fcf3c500cb835c2"
+    },
+    "stable-baselines3": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/stable-baselines3/SKILL.md",
+      "computedHash": "d897ff1092a816651c5a32a12a6ac09dcc4d4f51e58f97d7854e609598966291"
+    },
+    "statsmodels": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/statsmodels/SKILL.md",
+      "computedHash": "d4e185693569e019d5e98a0a3c9b4b13b45d72f424ab2243ba36b002bb53315e"
+    },
+    "torch-geometric": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/torch-geometric/SKILL.md",
+      "computedHash": "268dfd8429cf354f1a39e2783f8d4cbbfb98adc12ac807c204f610cc0ded673e"
+    },
+    "transformers": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/transformers/SKILL.md",
+      "computedHash": "e057d853884ab664b2ddbe1c32069071263b7bed26ab5f169c8224dc22e51847"
+    },
+    "umap-learn": {
+      "source": "tungcorn/claude-ml-skills",
+      "sourceType": "github",
+      "skillPath": "scientific-skills/umap-learn/SKILL.md",
+      "computedHash": "84f93704aa4e153faf6554b78ffacc34e1e738bd3bb05538aa0ce59e0b8132c5"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "3219a1944e404ffc14d1d9d6aef6dd2e3855b81387ee0a044ccbfe14d34c2357"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+    },
+    "webapp-testing": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/webapp-testing/SKILL.md",
+      "computedHash": "ad5b1fc52807e9afa4635e59218a026b164dc58b6c3f41b0f7c644dcd6ccf572"
+    }
+  }
+}
