@@ -1684,7 +1684,53 @@ function buildPistol(att) {
     poses: { guard: [V3(-0.03, -0.05, 0.03), V3(0.3, 0.25, 1.35)], mag: [V3(-0.015, -0.1, 0.045), V3(0.9, 0.2, 0.3)], pouch: POUCH, charge: [V3(0.0, 0.08, 0.06), V3(-0.7, 0, 1.2)] },
     reload: pistolReload(), preview: { dist: 0.62, center: 0.0 } });
 }
-const BUILD = { carbine: buildCarbine, smg: buildSMG, shotgun: buildShotgun, pistol: buildPistol };
+// ------------------------------------------------------------
+// Pistolet réaliste : modèle « Service Pistol » de Poly Haven (CC0, Mateusz Sadek), chargé au démarrage.
+// S'il ne se charge pas (page ouverte en file://), on garde le pistolet P17 dessiné en code.
+// ------------------------------------------------------------
+const EXT = {};
+try {
+  $('loadingText').textContent = 'Chargement des modèles…';
+  const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+  const g = await new GLTFLoader().loadAsync('models/service_pistol/service_pistol.gltf');
+  g.scene.traverse(o => { if (o.isMesh) { o.material.envMapIntensity = 0.9; o.material.userData.ext = 'service_pistol'; } });
+  EXT.pistol = g.scene;
+} catch (e) { console.warn('Pistolet réaliste non chargé, pistolet dessiné en code :', e.message); }
+function buildPistolReal(att) {
+  const src = EXT.pistol, root = new THREE.Group(), b = gunMats.black;
+  const slide = new THREE.Group(), mag = new THREE.Group(); root.add(slide, mag);
+  // le modèle a l'avant vers +x et la droite vers +z : on le tourne d'un quart de tour et on aligne sa poignée sur la main
+  const dx = -0.022, dy = -0.0133, turn = new THREE.Quaternion().setFromAxisAngle(V3(0, 1, 0), PI / 2);
+  const put = (name, parent, inserted = false) => {
+    const o = src.getObjectByName(name); if (!o) return null;
+    const m = o.clone(); const px = inserted ? 0 : o.position.x;
+    m.position.set(o.position.z, o.position.y + dy, -(px + dx)); m.quaternion.copy(turn).multiply(o.quaternion);
+    parent.add(m); return m;
+  };
+  put('service_pistol_pistol_a', root); put('service_pistol_hammer_a', root); put('service_pistol_trigger_a', root);
+  put('service_pistol_slide_a', slide); put('service_pistol_magazine_loaded', mag, true);
+  let sight;
+  if (att.optic === 'reddot') { const o = addRMR(slide, 0.008, 0.0545); sight = { p: P(o.x, o.y), dist: 0.34 }; }
+  else sight = { p: P(-0.027, 0.0642), dist: 0.33 };
+  let muzzle;
+  if (att.muzzle === 'suppressor') muzzle = addSuppressor(root, 0.1518, 0.049, 0.016, 0.15);
+  else muzzle = P(0.156, 0.049);
+  // lampe fixée sous le canon par un collier
+  const ly = 0.025;
+  part(root, xsec(rrect(0.026, 0.019, 0.005, 0, ly, 3), 0.084, 0.142, 0.001), b);
+  part(root, latheX([[0, 0.138], [0.0112, 0.138], [0.0122, 0.146], [0, 0.146]], ly, 20), b);
+  const lens = part(root, new THREE.CircleGeometry(0.0094, 16), gunMats.lens, V3(0, ly, -0.1465)); lens.rotation.y = PI;
+  part(root, xsec(fillet(rectPts(-0.0125, ly + 0.006, 0.0125, 0.052), 0.004), 0.1, 0.116, 0.0008, [circ(0.0092, 0, 0.049, 16).reverse()]), b);
+  part(root, new THREE.BoxGeometry(0.006, 0.007, 0.012), gunMats.rubber, V3(0.0145, ly, -0.092));
+  part(root, new THREE.BoxGeometry(0.006, 0.007, 0.012), gunMats.rubber, V3(-0.0145, ly, -0.092));
+  let laser = null;
+  if (att.rail === 'laser') { part(root, cylZ(0.0028, 0.0028, 0.004), gunMats.laserRed, V3(0.008, ly - 0.005, -0.1465)); laser = V3(0.008, ly - 0.005, -0.15); }
+  return finalize({ key: 'pistol', root, mag, magGrab: P(-0.03, -0.055), slide, slideTravel: 0.03, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.075, -0.135, -0.39),
+    grip: [V3(0.004, -0.03, 0.042), V3(-1.2, 0, -0.05)],
+    poses: { guard: [V3(-0.03, -0.05, 0.03), V3(0.3, 0.25, 1.35)], mag: [V3(-0.015, -0.1, 0.045), V3(0.9, 0.2, 0.3)], pouch: POUCH, charge: [V3(0.0, 0.08, 0.06), V3(-0.7, 0, 1.2)] },
+    reload: pistolReload(), preview: { dist: 0.7, center: 0.02 } });
+}
+const BUILD = { carbine: buildCarbine, smg: buildSMG, shotgun: buildShotgun, pistol: att => EXT.pistol ? buildPistolReal(att) : buildPistol(att) };
 
 // Gants et manches
 function buildGlove(curl, spread = 0) {

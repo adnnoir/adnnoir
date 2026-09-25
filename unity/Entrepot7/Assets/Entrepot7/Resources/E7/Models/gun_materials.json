@@ -485,8 +485,8 @@
   "metalness": 0,
   "roughness": 1
  },
- "mark_ed5f432f": {
-  "key": "mark_ed5f432f",
+ "service_pistol": {
+  "key": "service_pistol",
   "kind": "std",
   "color": "#ffffff",
   "lin": [
@@ -495,13 +495,35 @@
    1
   ],
   "opacity": 1,
-  "transparent": true,
+  "transparent": false,
   "additive": false,
   "doubleSide": false,
-  "metalness": 0.3,
-  "roughness": 0.55,
+  "metalness": 1,
+  "roughness": 1,
   "map": {
-   "name": "mark_ed5f432f_map",
+   "name": "service_pistol_diff",
+   "repeat": [
+    1,
+    1
+   ]
+  },
+  "normalMap": {
+   "name": "service_pistol_n",
+   "repeat": [
+    1,
+    1
+   ]
+  },
+  "normalScale": 1,
+  "roughnessMap": {
+   "name": "service_pistol_arm",
+   "repeat": [
+    1,
+    1
+   ]
+  },
+  "metalnessMap": {
+   "name": "service_pistol_arm",
    "repeat": [
     1,
     1

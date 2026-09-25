@@ -59,6 +59,7 @@ Ce fichier est mis à jour à chaque étape. Claude le relit au début de chaque
   - `godot` : il faut Godot installé sur le PC.
 
 ## Journal
+- 2026-09-25 (suite 5) : pistolet **réaliste** (Poly Haven « Service Pistol », CC0, glTF dans `bodycam/models/`) branché dans le web (`buildPistolReal`, repli sur le P17 en code) et exporté vers Unity (textures JPG copiées, shader E7/Lit avec carte de métal). Pas de personnages ni d'autres armes réalistes disponibles sans compte : il faut Mixamo / Asset Store avec l'utilisateur. Bug « première personne » toujours pas décrit.
 - 2026-09-25 (suite 4) : l'utilisateur a ouvert le projet dans Unity 6 et le jeu se lance. Corrigé : pause auto quand l'éditeur perd le focus, cônes de lumière (shader Unlit sans couleur de sommet, non testé). En attente : capture du bug « première personne » ; il veut des modèles « comme IRL » (joueurs + armes) → proposé : il télécharge des modèles réalistes gratuits (Mixamo SWAT, Asset Store), je code leur chargement.
 - 2026-09-25 (suite 3) : 2e passe sur les modèles des 4 armes (web), puis réexport vers Unity (`w_*.bytes`, point de visée de la carabine abaissé de 4 mm pour poser le viseur sur le rail).
 - 2026-09-25 (suite 2) : projet Unity complet (jeu, IA, coéquipiers, menus, sauvegarde, ML-Agents, MLOps). Poussé sur la branche.

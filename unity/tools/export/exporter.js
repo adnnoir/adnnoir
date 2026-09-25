@@ -17,6 +17,12 @@ window.__export = () => {
   }
   // ---------- matériaux ----------
   function matDesc(m, key) {
+    // modèle externe (glTF Poly Haven) : ses textures JPG sont copiées telles quelles par export.js
+    if (m.userData && m.userData.ext) {
+      const e = m.userData.ext, T = n => ({ name: n, repeat: [1, 1] });
+      return { key, kind: 'std', color: '#ffffff', lin: [1, 1, 1], opacity: 1, transparent: false, additive: false, doubleSide: false,
+        metalness: 1, roughness: 1, map: T(e + '_diff'), normalMap: T(e + '_n'), normalScale: 1, roughnessMap: T(e + '_arm'), metalnessMap: T(e + '_arm') };
+    }
     const d = { key, kind: m.isMeshBasicMaterial ? 'basic' : 'std' };
     if (m.color) { d.color = '#' + m.color.getHexString(); d.lin = [m.color.r, m.color.g, m.color.b]; }
     d.opacity = m.opacity; d.transparent = !!m.transparent; d.additive = m.blending === THREE.AdditiveBlending; d.doubleSide = m.side === THREE.DoubleSide;
@@ -74,6 +80,7 @@ window.__export = () => {
       for (const gr of groups) {
         const key = matKey(gr.mat, o); if (!key) continue;
         const remap = new Map(), P = [], Nn = [], U = [], I = [];
+        const flipV = !!(gr.mat.map && gr.mat.map.flipY === false); // textures glTF : v vers le bas, Unity : v vers le haut
         const v = new THREE.Vector3();
         for (let i = gr.start; i < gr.start + gr.count && i < index.length; i++) {
           const src = index[i];
@@ -82,7 +89,7 @@ window.__export = () => {
             dst = remap.size; remap.set(src, dst);
             v.fromBufferAttribute(pa, src).applyMatrix4(M); P.push(...mv(v, ax));
             if (na) { v.fromBufferAttribute(na, src).applyMatrix3(N).normalize(); Nn.push(...mv(v, ax)); } else Nn.push(0, 1, 0);
-            if (ua) U.push(ua.getX(src), ua.getY(src)); else U.push(0, 0);
+            if (ua) U.push(ua.getX(src), flipV ? 1 - ua.getY(src) : ua.getY(src)); else U.push(0, 0);
           }
           I.push(dst);
         }
@@ -132,6 +139,7 @@ window.__export = () => {
   const allMats = {};
   const keyGun = (m) => {
     let k = gmKey.get(m);
+    if (!k && m.userData && m.userData.ext) { k = m.userData.ext; gmKey.set(m, k); }
     if (!k) {
       // marquages : une clé par contenu (le même texte dans plusieurs variantes = même matériau)
       const url = m.map && m.map.image ? m.map.image.toDataURL() : String(markN++);

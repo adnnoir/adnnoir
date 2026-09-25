@@ -7,6 +7,12 @@ const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '../../..');
 const OUT = path.join(ROOT, 'unity/Entrepot7/Assets/Entrepot7/Resources/E7');
+// textures des modèles externes (glTF) : copiées sans réencodage, avec les noms attendus par gun_materials.json
+function copyExternal() {
+  const src = path.join(ROOT, 'bodycam/models/service_pistol/textures');
+  const map = { 'service_pistol_diff_2k.jpg': 'service_pistol_diff.jpg', 'service_pistol_nor_gl_2k.jpg': 'service_pistol_n.jpg', 'service_pistol_arm_2k.jpg': 'service_pistol_arm.jpg' };
+  for (const [a, b] of Object.entries(map)) fs.copyFileSync(path.join(src, a), path.join(OUT, 'Textures', b));
+}
 (async () => {
   // copie du jeu avec l'exportateur injecté juste avant le démarrage
   const src = fs.readFileSync(path.join(ROOT, 'bodycam/index.html'), 'utf8');
@@ -26,5 +32,6 @@ const OUT = path.join(ROOT, 'unity/Entrepot7/Assets/Entrepot7/Resources/E7');
   }
   await b.close();
   fs.unlinkSync(path.join(ROOT, 'bodycam/_export.html'));
+  copyExternal();
   console.log('Export terminé :', Object.keys(r.files).length, 'fichiers. Tailles :', JSON.stringify(r.sizes));
 })();

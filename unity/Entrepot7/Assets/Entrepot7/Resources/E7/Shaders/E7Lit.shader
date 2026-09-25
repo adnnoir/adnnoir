@@ -1,4 +1,4 @@
-// Matériau physique (métal, rugosité, carte de normales, carte de rugosité, émission).
+// Matériau physique (métal, rugosité, carte de normales, cartes de rugosité et de métal, émission).
 Shader "E7/Lit"
 {
     Properties
@@ -10,6 +10,7 @@ Shader "E7/Lit"
         _Metallic ("Métal", Range(0,1)) = 0
         _Roughness ("Rugosité", Range(0,1)) = 0.6
         _RoughMap ("Carte de rugosité", 2D) = "white" {}
+        _MetalMap ("Carte de métal (bleu)", 2D) = "white" {}
         [HDR] _EmissionColor ("Émission", Color) = (0,0,0,1)
         _EmissionMap ("Carte d'émission", 2D) = "white" {}
         [Enum(UnityEngine.Rendering.CullMode)] _Cull ("Faces", Float) = 2
@@ -22,7 +23,7 @@ Shader "E7/Lit"
         CGPROGRAM
         #pragma surface surf Standard fullforwardshadows addshadow
         #pragma target 3.0
-        sampler2D _MainTex, _BumpMap, _RoughMap, _EmissionMap;
+        sampler2D _MainTex, _BumpMap, _RoughMap, _MetalMap, _EmissionMap;
         fixed4 _Color;
         half _Metallic, _Roughness, _BumpScale;
         half4 _EmissionColor;
@@ -36,7 +37,8 @@ Shader "E7/Lit"
             o.Normal = normalize(n);
             half r = saturate(_Roughness * tex2D(_RoughMap, IN.uv_RoughMap).g);
             o.Smoothness = 1.0 - r;
-            o.Metallic = _Metallic;
+            // cartes « glTF » : rugosité dans le vert, métal dans le bleu
+            o.Metallic = _Metallic * tex2D(_MetalMap, IN.uv_RoughMap).b;
             o.Emission = _EmissionColor.rgb * tex2D(_EmissionMap, IN.uv_EmissionMap).rgb;
             o.Alpha = c.a;
         }

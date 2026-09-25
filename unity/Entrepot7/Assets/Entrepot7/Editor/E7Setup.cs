@@ -70,7 +70,7 @@ namespace E7.EditorTools
     /// <summary>Réglages d'import des textures exportées de la version web.</summary>
     public class E7TextureImport : AssetPostprocessor
     {
-        static readonly string[] Linear = { "gunWear", "brush", "concreteRough" };
+        static readonly string[] Linear = { "gunWear", "brush", "concreteRough", "service_pistol_arm" };
         static readonly string[] Alpha = { "flash", "dot", "cone", "hole", "blood", "blob", "holo" };
 
         void OnPreprocessTexture()

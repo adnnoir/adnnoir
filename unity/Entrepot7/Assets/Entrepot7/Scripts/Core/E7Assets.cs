@@ -147,6 +147,7 @@ namespace E7
             ApplyTex(m, "_BumpMap", MiniJson.Obj(d, "normalMap"));
             m.SetFloat("_BumpScale", MiniJson.Num(d, "normalScale", 1f));
             ApplyTex(m, "_RoughMap", MiniJson.Obj(d, "roughnessMap"));
+            ApplyTex(m, "_MetalMap", MiniJson.Obj(d, "metalnessMap"));
             var em = MiniJson.Arr(d, "emissive");
             if (em != null && em.Count == 3)
             {
