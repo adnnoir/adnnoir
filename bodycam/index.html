@@ -1692,7 +1692,7 @@ const EXT = {};
 try {
   $('loadingText').textContent = 'Chargement des modèles…';
   const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
-  const g = await new GLTFLoader().loadAsync('models/service_pistol/service_pistol.gltf');
+  const g = await new GLTFLoader().loadAsync('models/service_pistol/service_pistol.json');
   g.scene.traverse(o => { if (o.isMesh) { o.material.envMapIntensity = 0.9; o.material.userData.ext = 'service_pistol'; } });
   EXT.pistol = g.scene;
 } catch (e) { console.warn('Pistolet réaliste non chargé, pistolet dessiné en code :', e.message); }
