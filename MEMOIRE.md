@@ -21,6 +21,12 @@ Ce fichier est mis à jour à chaque étape. Claude le relit au début de chaque
   - menus (arsenal, personnage, paramètres, dossier) ;
   - bots humains (A*, couverture, reddition, menottes) ;
   - armes refaites en détail et visée corrigée ;
+  - **modèles d'armes refaits (2e passe)** : profils arrondis (fonctions `fillet` et `soften`), fentes M-LOK visibles (`sideSlot`, `botSlot`), crosse amincie (`taperW`) :
+    - carabine : carcasse usinée, poignée ergonomique, crosse évidée, chargeur courbe, capot d'éjection, assistance à la fermeture ;
+    - pistolet : carcasse et pontet carré, rainures pour les doigts, queue de castor ;
+    - fusil à pompe : crosse galbée, pompe à anneaux, fenêtre d'éjection avec culasse ;
+    - PM : poignée rainurée, chargeur courbe à nervure, plaque de crosse galbée ;
+    - le cache du point rouge ne bouche plus la visée ;
   - sauvegarde de carrière (dossier, historique, export/import) ;
   - **vrais sons** : tirs enregistrés (CC0) et voix Piper (CC BY 4.0), crédits dans `bodycam/CREDITS.md`.
 - Pour tester : `python3 -m http.server` dans `bodycam/`, sinon les sons ne se chargent pas en `file://`.
@@ -53,6 +59,7 @@ Ce fichier est mis à jour à chaque étape. Claude le relit au début de chaque
   - `godot` : il faut Godot installé sur le PC.
 
 ## Journal
+- 2026-09-25 (suite 3) : 2e passe sur les modèles des 4 armes (web), puis réexport vers Unity (`w_*.bytes`, point de visée de la carabine abaissé de 4 mm pour poser le viseur sur le rail).
 - 2026-09-25 (suite 2) : projet Unity complet (jeu, IA, coéquipiers, menus, sauvegarde, ML-Agents, MLOps). Poussé sur la branche.
 - 2026-09-25 (suite) : export des modèles web vers Unity, puis code Unity (niveau, audio, effets, armes) en cours.
 - 2026-09-25 : visée corrigée, sauvegarde de carrière, installations (plugins, skills, MCP), skill prof, vrais sons de tir et voix dans le jeu web.

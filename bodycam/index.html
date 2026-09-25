@@ -1224,6 +1224,46 @@ function rrect(w, h, r, cx = 0, cy = 0, seg = 4) {
 }
 function octo(w, h, c, cx = 0, cy = 0) { const x = w / 2, y = h / 2; return [[cx - x + c, cy - y], [cx + x - c, cy - y], [cx + x, cy - y + c], [cx + x, cy + y - c], [cx + x - c, cy + y], [cx - x + c, cy + y], [cx - x, cy + y - c], [cx - x, cy - y + c]]; }
 function circ(r, cx = 0, cy = 0, n = 20) { const p = []; for (let i = 0; i < n; i++) { const a = i / n * PI * 2; p.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } return p; }
+// arrondit les coins d'un profil : r = rayon du congé (nombre, ou tableau par sommet ; 0 = coin vif)
+function fillet(pts, r, seg = 4) {
+  const o = [], n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const B = pts[i], A = pts[(i + n - 1) % n], C = pts[(i + 1) % n];
+    const la = Math.hypot(A[0] - B[0], A[1] - B[1]), lc = Math.hypot(C[0] - B[0], C[1] - B[1]);
+    const d = Math.min(Array.isArray(r) ? r[i] : r, la * 0.48, lc * 0.48);
+    if (!(d > 1e-5)) { o.push(B); continue; }
+    const T1 = [B[0] + (A[0] - B[0]) / la * d, B[1] + (A[1] - B[1]) / la * d], T2 = [B[0] + (C[0] - B[0]) / lc * d, B[1] + (C[1] - B[1]) / lc * d];
+    for (let k = 0; k <= seg; k++) { const s = k / seg, a = (1 - s) * (1 - s), m = 2 * (1 - s) * s, c = s * s; o.push([a * T1[0] + m * B[0] + c * T2[0], a * T1[1] + m * B[1] + c * T2[1]]); }
+  }
+  return o;
+}
+// adoucit un profil organique (poignée, crosse) en coupant les coins ; sharp = indices des coins à garder vifs
+function soften(pts, it = 2, sharp = []) {
+  let Q = pts.map((p, i) => ({ x: p[0], y: p[1], s: sharp.includes(i) }));
+  for (let k = 0; k < it; k++) {
+    const o = [];
+    Q.forEach((a, i) => {
+      const c = Q[(i + 1) % Q.length];
+      o.push(a.s ? a : { x: a.x * 0.75 + c.x * 0.25, y: a.y * 0.75 + c.y * 0.25 });
+      if (!c.s) o.push({ x: a.x * 0.25 + c.x * 0.75, y: a.y * 0.25 + c.y * 0.75 });
+    });
+    Q = o;
+  }
+  return Q.map(p => [p.x, p.y]);
+}
+// fente sombre (M-LOK, rainure) posée sur les deux flancs, à la distance lat de l'axe
+function sideSlot(root, x0, x1, y, h, lat, mat = gunMats.dark) {
+  const w = x1 - x0, r = Math.min(w, h) / 2 - 1e-4;
+  for (const s of [-1, 1]) part(root, ex(rrect(w, h, r, (x0 + x1) / 2, y, 3), 0.0008, 0).translate(s * lat, 0, 0), mat);
+}
+// fente sombre posée à plat sous l'arme (face inférieure à la hauteur y)
+// amincit une pièce le long de l'arme : f(x) = facteur de largeur à la position x (vers l'avant) ; garder f linéaire pour que les flancs restent plats
+function taperW(g, f) { const a = g.attributes.position; for (let i = 0; i < a.count; i++) a.setX(i, a.getX(i) * f(-a.getZ(i))); g.computeVertexNormals(); return g; }
+function botSlot(root, xc, len, w, y, mat = gunMats.dark) {
+  const g = new THREE.ExtrudeGeometry(shape(rrect(len, w, Math.min(len, w) / 2 - 1e-4, 0, 0, 3)), { depth: 0.0008, bevelEnabled: false });
+  g.rotateX(-PI / 2); g.rotateY(PI / 2); g.translate(0, y, -xc);
+  return part(root, g, mat);
+}
 // tour (canon, cache-flamme…) : profil [rayon, position vers l'avant]
 function latheX(profile, yc, seg = 24) { const g = new THREE.LatheGeometry(profile.map(([r, x]) => new THREE.Vector2(r, x)), seg); g.rotateX(-PI / 2); g.translate(0, yc, 0); return g; }
 // marquages gravés
@@ -1269,9 +1309,10 @@ function addOptic(root, type, x, baseY) {
     part(root, new THREE.CylinderGeometry(0.0078, 0.0078, 0.004, 16), gunMats.poly, V3(0, cy + 0.029, -x));
     part(root, new THREE.CylinderGeometry(0.0075, 0.0075, 0.011, 16).rotateZ(PI / 2), b, V3(0.022, cy, -x));
     part(root, new THREE.CylinderGeometry(0.006, 0.006, 0.014, 14).rotateZ(PI / 2), b, V3(-0.021, cy - 0.004, -(x - 0.008)));
-    // cache avant relevé
-    const cap = part(root, new THREE.CylinderGeometry(0.019, 0.019, 0.004, 24), gunMats.rubber, V3(0, cy + 0.02, -(x + 0.034)));
-    cap.position.set(0, cy + 0.012, -(x + 0.046)); cap.rotation.x = 1.25;
+    // cache avant rabattu vers l'avant : charnière sur le dessus, clapet à plat caché derrière le tube (hors de la ligne de visée)
+    part(root, new THREE.BoxGeometry(0.008, 0.004, 0.006), gunMats.rubber, V3(0, cy + 0.021, -(x + 0.027)));
+    const cap = part(root, new THREE.CylinderGeometry(0.019, 0.019, 0.004, 24), gunMats.rubber, V3(0, cy + 0.023, -(x + 0.05)));
+    cap.rotation.x = -0.1;
     part(root, new THREE.CircleGeometry(0.0013, 14), gunMats.dot, P(x + 0.026, cy));
     return { y: cy, x: x - 0.028 };
   }
@@ -1344,73 +1385,95 @@ function finalize(W) { W.root.traverse(m => { if (m.isMesh) { m.castShadow = fal
 // Carabine CT-4 (famille AR-15)
 // ------------------------------------------------------------
 function buildCarbine(att) {
-  const root = new THREE.Group(), b = gunMats.black, t = gunMats.tan, p = gunMats.poly;
-  // carcasse inférieure : corps, puits de chargeur évasé, pontet, détente
-  part(root, ex([[-0.128, 0.02], [-0.128, -0.02], [-0.118, -0.03], [0.03, -0.03], [0.034, -0.02], [0.118, -0.02], [0.126, -0.006], [0.126, 0.02]], 0.05, 0.0025), b);
-  part(root, ex([[0.028, -0.02], [0.108, -0.02], [0.112, -0.078], [0.116, -0.084], [0.02, -0.084], [0.024, -0.078]], 0.052, 0.0025), b);
-  part(root, ex([[0.05, -0.05], [0.1, -0.05], [0.1, -0.06], [0.05, -0.06]], 0.0535, 0.001), b);
-  part(root, ex([[-0.04, -0.03], [0.03, -0.03], [0.032, -0.07], [-0.036, -0.062]], 0.012, 0.0015, [[[-0.032, -0.036], [0.024, -0.036], [0.025, -0.063], [-0.03, -0.056]]]), b);
-  part(root, ex([[-0.004, -0.03], [0.002, -0.03], [0.004, -0.05], [-0.002, -0.052], [-0.004, -0.045]], 0.005, 0.0008), gunMats.steel);
+  const root = new THREE.Group(), b = gunMats.black, t = gunMats.tan, p = gunMats.poly, st = gunMats.steel;
+  // carcasse inférieure usinée : corps, puits de chargeur évasé, ergot de pivot
+  part(root, ex(fillet([[-0.128, 0.02], [-0.128, -0.002], [-0.114, -0.03], [0.024, -0.03], [0.022, -0.08], [0.028, -0.088], [0.11, -0.088], [0.117, -0.082], [0.112, -0.062], [0.112, -0.022], [0.12, -0.014], [0.126, 0.0], [0.126, 0.02]],
+    [0, 0.006, 0.01, 0.003, 0.003, 0.004, 0.004, 0.003, 0.006, 0.004, 0.004, 0.004, 0]), 0.05, 0.002), b);
+  part(root, ex(fillet([[0.02, -0.075], [0.116, -0.075], [0.12, -0.091], [0.018, -0.091]], 0.002), 0.054, 0.0015), b);
+  // pontet intégré, détente courbe
+  part(root, ex(soften([[-0.042, -0.028], [0.026, -0.028], [0.026, -0.064], [0.014, -0.072], [-0.022, -0.067], [-0.042, -0.056]], 2, [0, 1]), 0.012, 0.0015,
+    [soften([[-0.033, -0.034], [0.019, -0.034], [0.019, -0.06], [0.01, -0.065], [-0.02, -0.061], [-0.033, -0.051]], 2)]), b);
+  part(root, ex(soften([[-0.004, -0.028], [0.003, -0.028], [0.003, -0.04], [0.007, -0.052], [0.003, -0.057], [-0.002, -0.049], [-0.004, -0.04]], 1, [0, 1]), 0.005, 0.0008), st);
   // sélecteur, arrêtoir, bouton chargeur, goupilles
   const sel = part(root, new THREE.BoxGeometry(0.004, 0.006, 0.02), b, V3(-0.0295, 0.008, 0.043)); sel.rotation.x = -0.2;
   part(root, new THREE.CylinderGeometry(0.006, 0.006, 0.004, 14).rotateZ(PI / 2), b, V3(-0.0285, 0.008, 0.035));
-  part(root, new THREE.BoxGeometry(0.004, 0.02, 0.012), b, V3(-0.0285, -0.004, -0.035));
-  part(root, new THREE.CylinderGeometry(0.005, 0.005, 0.006, 12).rotateZ(PI / 2), gunMats.poly, V3(0.0285, -0.004, -0.028));
-  for (const x of [-0.108, 0.112]) for (const s of [-1, 1]) part(root, new THREE.CylinderGeometry(0.003, 0.003, 0.003, 10).rotateZ(PI / 2), gunMats.steel, V3(s * 0.028, 0.012, -x));
-  // poignée ergonomique
-  part(root, ex([[-0.078, -0.03], [-0.034, -0.03], [-0.036, -0.045], [-0.05, -0.1], [-0.058, -0.146], [-0.078, -0.15], [-0.1, -0.143], [-0.096, -0.12], [-0.088, -0.07], [-0.086, -0.04]], 0.034, 0.005), t);
-  // carcasse supérieure, assistance à la fermeture, déflecteur, capot d'éjection
-  part(root, ex([[-0.13, 0.02], [0.13, 0.02], [0.13, 0.066], [-0.13, 0.066]], 0.046, 0.003), b);
+  part(root, ex(fillet([[0.026, -0.016], [0.044, -0.016], [0.044, 0.006], [0.036, 0.008]], 0.002), 0.004, 0.0006).translate(-0.028, 0, 0), b);
+  part(root, new THREE.CylinderGeometry(0.005, 0.005, 0.006, 12).rotateZ(PI / 2), p, V3(0.0285, -0.004, -0.028));
+  for (const x of [-0.108, 0.112]) for (const s of [-1, 1]) part(root, new THREE.CylinderGeometry(0.003, 0.003, 0.003, 10).rotateZ(PI / 2), st, V3(s * 0.028, 0.012, -x));
+  // poignée ergonomique : renflement pour les doigts, queue de castor
+  part(root, ex(soften([[-0.034, -0.026], [-0.038, -0.042], [-0.046, -0.062], [-0.05, -0.074], [-0.046, -0.087], [-0.053, -0.1], [-0.06, -0.132], [-0.062, -0.15], [-0.072, -0.157], [-0.098, -0.153], [-0.106, -0.142], [-0.1, -0.112], [-0.092, -0.08], [-0.092, -0.056], [-0.1, -0.042], [-0.116, -0.036], [-0.12, -0.026]], 2, [0, 16]), 0.03, 0.004), t);
+  part(root, ex(fillet([[-0.064, -0.15], [-0.1, -0.147], [-0.103, -0.156], [-0.07, -0.16]], 0.002), 0.026, 0.002), p);
+  // carcasse supérieure à flancs droits, chanfreins sous le rail
+  part(root, xsec([[-0.023, 0.02], [0.023, 0.02], [0.023, 0.05], [0.016, 0.059], [0.0125, 0.066], [-0.0125, 0.066], [-0.016, 0.059], [-0.023, 0.05]], -0.13, 0.13, 0.0015), b);
+  // assistance à la fermeture (boîtier + bouton), déflecteur, capot d'éjection
+  part(root, ex(soften([[-0.084, 0.038], [-0.052, 0.035], [-0.036, 0.046], [-0.052, 0.061], [-0.084, 0.061]], 2, [0, 4]), 0.014, 0.0015).translate(0.023, 0, 0), b);
   part(root, new THREE.CylinderGeometry(0.0085, 0.0085, 0.032, 16).rotateX(PI / 2 - 0.25), b, V3(0.027, 0.05, 0.085));
-  part(root, new THREE.CylinderGeometry(0.0065, 0.0065, 0.006, 16).rotateX(PI / 2 - 0.25), gunMats.steel, V3(0.029, 0.053, 0.102));
-  part(root, ex([[0.0, 0.03], [0.028, 0.03], [0.028, 0.055], [0.01, 0.055]], 0.008, 0.0008).translate(0.028, 0, 0), b);
-  part(root, new THREE.BoxGeometry(0.0025, 0.02, 0.066), b, V3(0.0268, 0.04, -0.018));
-  part(root, new THREE.BoxGeometry(0.001, 0.003, 0.03), gunMats.steel, V3(0.0282, 0.046, -0.005));
+  part(root, new THREE.CylinderGeometry(0.0065, 0.0065, 0.006, 16).rotateX(PI / 2 - 0.25), st, V3(0.029, 0.053, 0.102));
+  part(root, ex(soften([[-0.033, 0.034], [-0.017, 0.034], [-0.017, 0.058], [-0.026, 0.058]], 1, [0, 1]), 0.008, 0.0008).translate(0.028, 0, 0), b);
+  part(root, ex(fillet(rectPts(-0.015, 0.028, 0.052, 0.052), 0.002), 0.0008, 0).translate(0.0249, 0, 0), gunMats.dark);
+  part(root, ex(fillet(rectPts(-0.013, 0.03, 0.05, 0.05), 0.002), 0.0012, 0.0004).translate(0.0257, 0, 0), b);
+  part(root, new THREE.BoxGeometry(0.0014, 0.0035, 0.012), st, V3(0.0268, 0.046, -0.004));
+  part(root, cylZ(0.0012, 0.0012, 0.064, 8), st, V3(0.0262, 0.0295, -0.018));
+  part(root, new THREE.BoxGeometry(0.0545, 0.0008, 0.25), gunMats.dark, V3(0, 0.0202, 0));
   addPicatinny(root, -0.13, 0.13, 0.066, 0.022);
   // levier d'armement en T
   const handle = new THREE.Group(); root.add(handle);
   part(handle, new THREE.BoxGeometry(0.012, 0.008, 0.03), b, V3(0, 0.06, 0.14));
-  part(handle, xsec([[-0.024, 0.056], [0.024, 0.056], [0.02, 0.066], [-0.02, 0.066]], -0.162, -0.15, 0.0008), b);
-  // garde-main octogonal flottant avec fentes M-LOK
-  part(root, xsec(octo(0.064, 0.064, 0.016, 0, 0.028), 0.132, 0.445, 0.0015), b);
-  for (let i = 0; i < 5; i++) for (const s of [-1, 1]) { const z = -(0.17 + i * 0.054); part(root, new THREE.BoxGeometry(0.0012, 0.009, 0.03), gunMats.dark, V3(s * 0.0322, 0.028, z)); part(root, new THREE.BoxGeometry(0.03, 0.0012, 0.009), gunMats.dark, V3(0, -0.0042, z).add(V3(0, 0, 0))); }
-  part(root, xsec(octo(0.068, 0.068, 0.017, 0, 0.028), 0.132, 0.14, 0.0008), b);
+  part(handle, xsec(fillet([[-0.024, 0.056], [0.024, 0.056], [0.02, 0.066], [-0.02, 0.066]], 0.002), -0.162, -0.15, 0.0008), b);
+  // garde-main octogonal flottant : fentes M-LOK sur les flancs et dessous, bague arrière
+  const hgY = 0.028;
+  part(root, xsec(octo(0.064, 0.064, 0.017, 0, hgY), 0.132, 0.445, 0.0015), b);
+  for (let i = 0; i < 5; i++) { const xc = 0.19 + i * 0.05; sideSlot(root, xc - 0.016, xc + 0.016, hgY, 0.0075, 0.0336); botSlot(root, xc, 0.032, 0.0075, -0.0058); }
+  part(root, xsec(octo(0.068, 0.068, 0.018, 0, hgY), 0.132, 0.142, 0.0008), b);
+  part(root, xsec(octo(0.058, 0.058, 0.015, 0, hgY), 0.445, 0.449, 0.0006, [circ(0.012, 0, hgY, 16).reverse()]), b);
+  part(root, new THREE.CylinderGeometry(0.006, 0.006, 0.003, 14).rotateZ(PI / 2), st, V3(-0.0345, 0.014, -0.42));
+  part(root, new THREE.CylinderGeometry(0.0028, 0.0028, 0.0032, 10).rotateZ(PI / 2), gunMats.dark, V3(-0.0348, 0.014, -0.42));
   addPicatinny(root, 0.145, 0.44, 0.06, 0.02);
-  // canon profilé, bloc de gaz, cache-flamme
-  part(root, latheX([[0, 0.44], [0.0105, 0.44], [0.0098, 0.5], [0.0092, 0.6], [0, 0.6]], 0.028, 20), gunMats.steel);
+  // canon profilé (épaulement M4), cache-flamme
+  part(root, latheX([[0, 0.44], [0.0105, 0.44], [0.0098, 0.47], [0.0095, 0.515], [0.0082, 0.518], [0.0082, 0.532], [0.009, 0.535], [0.009, 0.6], [0, 0.6]], 0.028, 20), st);
   let muzzle;
   if (att.muzzle === 'suppressor') muzzle = addSuppressor(root, 0.6, 0.028, 0.021, 0.17);
   else muzzle = addBirdcage(root, 0.6, 0.028);
-  // tube de crosse, écrou crénelé, crosse réglable
-  part(root, latheX([[0, -0.3], [0.0165, -0.3], [0.0165, -0.14], [0.02, -0.138], [0.02, -0.128], [0, -0.128]], 0.035, 20), b);
-  part(root, ex([[-0.385, -0.058], [-0.385, 0.066], [-0.33, 0.072], [-0.25, 0.066], [-0.205, 0.056], [-0.205, 0.02], [-0.26, 0.004], [-0.3, -0.018], [-0.34, -0.05]], 0.044, 0.005), t);
-  part(root, ex([[-0.29, 0.066], [-0.21, 0.058], [-0.21, 0.072], [-0.29, 0.08]], 0.03, 0.004), t);
-  part(root, ex(rectPts(-0.4, -0.062, -0.385, 0.07), 0.048, 0.003), gunMats.rubber);
-  part(root, new THREE.BoxGeometry(0.012, 0.008, 0.04), b, V3(0, 0.005, 0.26));
-  // chargeur polymère avec nervures
+  // tube de crosse, écrou crénelé, plaque arrière
+  part(root, latheX([[0, -0.3], [0.0155, -0.3], [0.0165, -0.297], [0.0165, -0.142], [0, -0.142]], 0.035, 20), b);
+  part(root, latheX([[0, -0.142], [0.0205, -0.142], [0.0205, -0.131], [0, -0.131]], 0.035, 20), b);
+  for (let i = 0; i < 6; i++) { const a = i / 6 * PI * 2 + 0.3; part(root, new THREE.BoxGeometry(0.004, 0.004, 0.006), gunMats.dark, V3(Math.cos(a) * 0.0195, 0.035 + Math.sin(a) * 0.0195, 0.1365)); }
+  part(root, ex(fillet(rectPts(-0.134, 0.004, -0.129, 0.062), 0.004), 0.036, 0.0008), b);
+  // crosse réglable : profil creusé, joue relevée, plaque de couche nervurée, levier de verrouillage
+  const stock = soften([[-0.205, 0.058], [-0.25, 0.062], [-0.33, 0.068], [-0.378, 0.072], [-0.386, 0.066], [-0.386, -0.052], [-0.378, -0.06], [-0.35, -0.052], [-0.3, -0.028], [-0.255, -0.006], [-0.22, 0.012], [-0.205, 0.02], [-0.198, 0.04]], 2, [4, 5]);
+  part(root, ex(stock, 0.042, 0.004, [fillet([[-0.366, -0.04], [-0.352, -0.04], [-0.31, -0.018], [-0.296, 0.004], [-0.366, 0.004]], 0.006)]), t);
+  part(root, ex(soften([[-0.352, 0.064], [-0.232, 0.056], [-0.214, 0.062], [-0.226, 0.072], [-0.29, 0.08], [-0.352, 0.08]], 2, [0, 5]), 0.03, 0.004), t);
+  part(root, ex(fillet([[-0.401, -0.056], [-0.384, -0.054], [-0.384, 0.068], [-0.401, 0.072]], [0.006, 0, 0, 0.006]), 0.046, 0.003), gunMats.rubber);
+  for (let i = 0; i < 9; i++) part(root, new THREE.BoxGeometry(0.056, 0.0016, 0.016), gunMats.dark, V3(0, -0.044 + i * 0.013, 0.398));
+  part(root, ex(soften([[-0.262, -0.014], [-0.226, 0.004], [-0.219, 0.002], [-0.256, -0.02]], 1), 0.012, 0.001), b);
+  // chargeur polymère courbe : nervures de préhension, semelle évasée
   const mag = new THREE.Group(); root.add(mag);
-  part(mag, ex([[0.036, -0.03], [0.098, -0.03], [0.105, -0.09], [0.118, -0.18], [0.125, -0.22], [0.068, -0.23], [0.058, -0.13], [0.045, -0.07]], 0.027, 0.002), t);
-  for (let i = 0; i < 4; i++) part(mag, ex([[0.061 + i * 0.001, -0.17 - i * 0.012], [0.12 + i * 0.002, -0.17 - i * 0.012], [0.121 + i * 0.002, -0.174 - i * 0.012], [0.062 + i * 0.001, -0.174 - i * 0.012]], 0.029, 0.0005), t);
-  part(mag, ex([[0.062, -0.228], [0.128, -0.22], [0.13, -0.238], [0.06, -0.244]], 0.033, 0.003), gunMats.poly);
-  // sangle attachée à l'avant du garde-main
-  addSling(root, V3(-0.036, 0.0, -0.4), [V3(-0.06, -0.1, -0.34), V3(-0.085, -0.28, -0.12), V3(-0.1, -0.5, 0.15)]);
+  const mc = u => 0.03 * Math.pow(u, 1.6), my = u => -0.03 - 0.195 * u;
+  const mf = [], mr = [];
+  for (let i = 0; i <= 10; i++) { const u = i / 10; mf.push([0.098 + mc(u), my(u)]); mr.push([0.042 + mc(u), my(u)]); }
+  part(mag, ex([...mf, ...mr.reverse()], 0.027, 0.002), t);
+  for (let i = 0; i < 4; i++) { const u = 0.64 + i * 0.07, y = my(u); part(mag, ex(fillet([[0.046 + mc(u), y], [0.096 + mc(u), y], [0.096 + mc(u), y - 0.004], [0.046 + mc(u), y - 0.004]], 0.0012), 0.033, 0.0005), t); }
+  for (let i = 0; i < 3; i++) { const u = 0.12 + i * 0.05, y = my(u); part(mag, ex(fillet([[0.05 + mc(u), y], [0.09 + mc(u), y], [0.09 + mc(u), y - 0.003], [0.05 + mc(u), y - 0.003]], 0.001), 0.032, 0.0004), t); }
+  part(mag, ex(fillet([[0.068, -0.221], [0.13, -0.219], [0.135, -0.228], [0.13, -0.238], [0.07, -0.241], [0.064, -0.232]], 0.003), 0.032, 0.002), p);
+  // sangle attachée au garde-main (attache rapide)
+  addSling(root, V3(-0.038, 0.014, -0.42), [V3(-0.06, -0.1, -0.34), V3(-0.085, -0.28, -0.12), V3(-0.1, -0.5, 0.15)]);
   // marquages
   addMark(root, ['CT-4  CAL 5.56 NATO', 'S/N E7-004471'], V3(-0.0282, -0.006, -0.05), 0.07, 0.018, 34);
   addMark(root, ['SAFE', 'SEMI  AUTO'], V3(-0.0282, 0.012, 0.02), 0.03, 0.012, 40);
   let sight;
   if (att.optic === 'irons') {
-    part(root, ex(rectPts(-0.118, 0.08, -0.082, 0.088), 0.03, 0.001), b);
+    part(root, ex(fillet(rectPts(-0.118, 0.0765, -0.082, 0.088), 0.002), 0.03, 0.001), b);
     part(root, new THREE.TorusGeometry(0.0052, 0.0014, 10, 24), b, V3(0, 0.098, 0.1));
     part(root, new THREE.BoxGeometry(0.003, 0.01, 0.004), b, V3(0, 0.0895, 0.1));
     for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.004, 0.022, 0.006), b, V3(s * 0.011, 0.094, 0.1));
-    part(root, ex(rectPts(0.405, 0.068, 0.43, 0.084), 0.028, 0.001), b);
+    part(root, ex(fillet(rectPts(0.405, 0.068, 0.43, 0.084), 0.002), 0.028, 0.001), b);
     part(root, new THREE.BoxGeometry(0.0028, 0.013, 0.003), b, V3(0, 0.0925, -0.418));
     part(root, new THREE.BoxGeometry(0.0012, 0.0012, 0.001), gunMats.tritium, V3(0, 0.0985, -0.4165));
     for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.003, 0.018, 0.006), b, V3(s * 0.009, 0.094, -0.418));
     sight = { p: V3(0, 0.098, 0.1), dist: 0.2 };
   } else {
-    part(root, ex(rectPts(0.41, 0.068, 0.432, 0.074), 0.02, 0.001), b);
-    const o = addOptic(root, att.optic, 0.03, 0.08); sight = { p: P(o.x, o.y), dist: 0.25 };
+    part(root, ex(fillet(rectPts(0.41, 0.068, 0.432, 0.074), 0.002), 0.02, 0.001), b);
+    const o = addOptic(root, att.optic, 0.03, 0.076); sight = { p: P(o.x, o.y), dist: 0.25 };
   }
   const laser = addRail(root, att.rail, V3(-0.044, 0.03, -0.39), V3(0.048, 0.028, -0.37));
   return finalize({ key: 'carbine', root, mag, magGrab: P(0.08, -0.13), handle, handleTravel: 0.06, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.12, -0.165, -0.41),
@@ -1423,25 +1486,28 @@ function buildCarbine(att) {
 // Pistolet-mitrailleur MP9 (famille MP5)
 // ------------------------------------------------------------
 function buildSMG(att) {
-  const root = new THREE.Group(), b = gunMats.black, p = gunMats.poly;
-  // boîtier embouti : profil arrondi avec nervures latérales
+  const root = new THREE.Group(), b = gunMats.black, p = gunMats.poly, st = gunMats.steel;
+  // boîtier embouti : profil arrondi avec nervures latérales, bouchon arrière
   part(root, xsec([[-0.024, 0.012], [0.024, 0.012], [0.025, 0.036], [0.02, 0.056], [0.01, 0.063], [-0.01, 0.063], [-0.02, 0.056], [-0.025, 0.036]], -0.125, 0.205, 0.0015), b);
   for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.003, 0.005, 0.32), b, V3(s * 0.0272, 0.046, -0.04));
-  part(root, new THREE.BoxGeometry(0.003, 0.012, 0.05), gunMats.dark, V3(0.0272, 0.038, -0.03));
-  // carcasse et poignée polymère
-  part(root, ex([[-0.078, 0.013], [0.072, 0.013], [0.072, -0.018], [0.02, -0.028], [0.004, -0.034], [-0.016, -0.126], [-0.036, -0.132], [-0.062, -0.124], [-0.05, -0.036], [-0.078, -0.022]], 0.038, 0.004), p);
-  part(root, ex([[-0.005, -0.02], [0.042, -0.02], [0.046, -0.052], [0.0, -0.052]], 0.016, 0.001, [[[0.004, -0.026], [0.036, -0.026], [0.038, -0.046], [0.006, -0.046]]]), p);
-  part(root, ex([[0.014, -0.022], [0.02, -0.022], [0.022, -0.04], [0.016, -0.042]], 0.005, 0.0008), gunMats.steel);
+  part(root, ex(fillet(rectPts(-0.002, 0.028, 0.058, 0.048), 0.003), 0.0008, 0).translate(0.0268, 0, 0), gunMats.dark);
+  part(root, xsec(fillet([[-0.025, 0.012], [0.025, 0.012], [0.026, 0.04], [0.018, 0.06], [-0.018, 0.06], [-0.026, 0.04]], 0.004), -0.14, -0.125, 0.0015), b);
+  // carcasse et poignée polymère : rainures pour les doigts
+  part(root, ex(soften([[-0.078, 0.013], [0.072, 0.013], [0.072, -0.016], [0.022, -0.024], [0.006, -0.03], [0.002, -0.046], [-0.006, -0.056], [-0.004, -0.066], [-0.01, -0.078], [-0.008, -0.088], [-0.014, -0.1], [-0.016, -0.124], [-0.03, -0.133], [-0.058, -0.127], [-0.063, -0.1], [-0.055, -0.06], [-0.05, -0.036], [-0.066, -0.028], [-0.078, -0.018]], 2, [0, 1, 2]), 0.036, 0.004), p);
+  for (const x of [-0.07, 0.062]) part(root, new THREE.CylinderGeometry(0.0028, 0.0028, 0.046, 10).rotateZ(PI / 2), st, P(x, 0.0));
+  part(root, ex(soften([[-0.004, -0.018], [0.044, -0.018], [0.049, -0.034], [0.043, -0.055], [0.0, -0.055], [-0.004, -0.04]], 2, [0, 1]), 0.016, 0.0012,
+    [soften([[0.005, -0.026], [0.037, -0.026], [0.041, -0.036], [0.036, -0.047], [0.007, -0.047], [0.005, -0.036]], 2)]), p);
+  part(root, ex(soften([[0.014, -0.02], [0.021, -0.02], [0.022, -0.03], [0.025, -0.041], [0.02, -0.044], [0.016, -0.034]], 1, [0, 1]), 0.005, 0.0008), st);
   const sel = part(root, new THREE.BoxGeometry(0.004, 0.005, 0.024), b, V3(-0.0238, -0.006, 0.05)); sel.rotation.x = 0.35;
   addMark(root, ['S  1  F'], V3(-0.0235, 0.0, 0.035), 0.03, 0.01, 44);
   // puits et palette de retenue
-  part(root, ex(rectPts(0.072, -0.024, 0.114, 0.012), 0.034, 0.002), b);
-  part(root, ex([[0.06, -0.024], [0.072, -0.024], [0.07, -0.034], [0.06, -0.032]], 0.03, 0.0008), b);
+  part(root, ex(fillet(rectPts(0.072, -0.026, 0.114, 0.012), [0.003, 0.003, 0, 0]), 0.034, 0.002), b);
+  part(root, ex(fillet([[0.058, -0.024], [0.072, -0.024], [0.07, -0.036], [0.058, -0.033]], 0.002), 0.03, 0.0008), b);
   // garde-main tropical rainuré
   part(root, xsec(rrect(0.05, 0.05, 0.016, 0, 0.034, 4), 0.205, 0.335, 0.0015), p);
-  for (let i = 0; i < 6; i++) for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.0012, 0.03, 0.006), gunMats.dark, V3(s * 0.0268, 0.034, -(0.215 + i * 0.019)));
+  for (let i = 0; i < 6; i++) sideSlot(root, 0.212 + i * 0.019, 0.218 + i * 0.019, 0.034, 0.03, 0.0266);
   // canon, tube d'armement, levier replié, guidon sous tunnel
-  part(root, latheX([[0, 0.33], [0.0095, 0.33], [0.009, 0.4], [0.011, 0.4], [0.011, 0.415], [0, 0.415]], 0.036, 18), gunMats.steel);
+  part(root, latheX([[0, 0.33], [0.0095, 0.33], [0.009, 0.4], [0.011, 0.4], [0.011, 0.415], [0, 0.415]], 0.036, 18), st);
   part(root, latheX([[0, 0.205], [0.011, 0.205], [0.011, 0.33], [0.0095, 0.335], [0, 0.335]], 0.072, 18), b);
   const handle = new THREE.Group(); root.add(handle);
   const hb = part(handle, new THREE.BoxGeometry(0.03, 0.007, 0.011), b, V3(-0.026, 0.074, -0.3)); hb.rotation.y = -0.45;
@@ -1449,21 +1515,29 @@ function buildSMG(att) {
   const hood = [[-0.013, 0.062], [0.013, 0.062], [0.013, 0.082], [0.009, 0.093], [-0.009, 0.093], [-0.013, 0.082]];
   part(root, xsec(hood, 0.318, 0.34, 0.0005, [circ(0.0095, 0, 0.079, 16).reverse()]), b);
   part(root, new THREE.BoxGeometry(0.0028, 0.012, 0.003), b, P(0.33, 0.075));
-  // diopatre arrière : anneau + tambour
+  // dioptre arrière : anneau + tambour
   part(root, new THREE.TorusGeometry(0.0056, 0.0015, 10, 24), b, P(-0.1, 0.079));
   for (const s of [-1, 1]) part(root, new THREE.CylinderGeometry(0.012, 0.012, 0.004, 16).rotateZ(PI / 2), b, V3(s * 0.011, 0.074, 0.1));
   part(root, ex(rectPts(-0.112, 0.062, -0.088, 0.07), 0.02, 0.001), b);
   if (att.optic !== 'irons') { part(root, ex(rectPts(-0.07, 0.063, 0.09, 0.068), 0.03, 0.001), b); addPicatinny(root, -0.07, 0.09, 0.068, 0.022); }
-  // crosse rétractable
-  for (const s of [-1, 1]) part(root, tubeAlong(0.0052, -0.31, -0.12, 0.03).translate(s * 0.02, 0, 0), gunMats.steel);
-  part(root, ex([[-0.34, -0.05], [-0.31, -0.05], [-0.305, 0.07], [-0.34, 0.07]], 0.052, 0.005), p);
-  part(root, ex(rectPts(-0.348, -0.048, -0.338, 0.068), 0.05, 0.003), gunMats.rubber);
+  // crosse rétractable : tiges, embouts, plaque de couche galbée
+  for (const s of [-1, 1]) {
+    part(root, tubeAlong(0.0052, -0.31, -0.12, 0.03).translate(s * 0.02, 0, 0), st);
+    part(root, tubeAlong(0.0068, -0.31, -0.296, 0.03).translate(s * 0.02, 0, 0), b);
+  }
+  part(root, ex(soften([[-0.336, -0.05], [-0.316, -0.05], [-0.306, -0.036], [-0.303, 0.03], [-0.307, 0.062], [-0.32, 0.07], [-0.336, 0.068]], 2, [0, 6]), 0.04, 0.005), p);
+  part(root, ex(fillet([[-0.348, -0.05], [-0.336, -0.052], [-0.336, 0.069], [-0.348, 0.068]], [0.004, 0, 0, 0.004]), 0.048, 0.003), gunMats.rubber);
+  for (let i = 0; i < 8; i++) part(root, new THREE.BoxGeometry(0.058, 0.0015, 0.014), gunMats.dark, V3(0, -0.04 + i * 0.014, 0.344));
   part(root, new THREE.BoxGeometry(0.01, 0.012, 0.02), b, V3(0, 0.012, 0.13));
-  // chargeur courbe nervuré
+  // chargeur courbe à nervure latérale
   const mag = new THREE.Group(); root.add(mag);
-  part(mag, ex([[0.074, -0.02], [0.108, -0.02], [0.118, -0.1], [0.14, -0.2], [0.112, -0.21], [0.088, -0.11]], 0.024, 0.002), b);
-  for (const s of [-1, 1]) part(mag, ex([[0.086, -0.04], [0.092, -0.04], [0.108, -0.18], [0.102, -0.18]], 0.002, 0.0003).translate(s * 0.0125, 0, 0), b);
-  part(mag, ex([[0.108, -0.2], [0.144, -0.198], [0.146, -0.212], [0.11, -0.214]], 0.028, 0.002), b);
+  const mq = u => Math.pow(u, 1.7);
+  const mf = [], mr = [], rc = [];
+  for (let i = 0; i <= 10; i++) { const u = i / 10, y = -0.02 - 0.185 * u; mf.push([0.108 + 0.032 * mq(u), y]); mr.push([0.074 + 0.036 * mq(u), y - 0.004 * u]); rc.push([0.091 + 0.034 * mq(u), y - 0.002 * u]); }
+  part(mag, ex([...mf, ...mr.slice().reverse()], 0.024, 0.002), b);
+  const rib = [...rc.slice(1, 10).map(([x, y]) => [x + 0.0028, y]), ...rc.slice(1, 10).reverse().map(([x, y]) => [x - 0.0028, y])];
+  for (const s of [-1, 1]) part(mag, ex(fillet(rib, 0.001, 2), 0.002, 0.0003).translate(s * 0.0142, 0, 0), b);
+  part(mag, ex(fillet([[0.108, -0.198], [0.145, -0.197], [0.148, -0.206], [0.144, -0.214], [0.11, -0.216], [0.106, -0.207]], 0.002), 0.028, 0.002), b);
   addSling(root, V3(-0.03, 0.04, -0.2), [V3(-0.06, -0.06, -0.15), V3(-0.08, -0.25, 0.0), V3(-0.1, -0.5, 0.2)]);
   addMark(root, ['MP9  9mm x19'], V3(-0.0275, 0.03, -0.1), 0.05, 0.01, 44);
   let muzzle;
@@ -1483,52 +1557,60 @@ function buildSMG(att) {
 // Fusil à pompe SG-12 (famille 870)
 // ------------------------------------------------------------
 function buildShotgun(att) {
-  const root = new THREE.Group(), b = gunMats.black, p = gunMats.poly;
-  // boîte de culasse à dos arrondi
+  const root = new THREE.Group(), b = gunMats.black, p = gunMats.poly, st = gunMats.steel;
+  // boîte de culasse à dos arrondi, fenêtre d'éjection avec culasse visible, lumière de chargement
   part(root, xsec([[-0.025, -0.012], [0.025, -0.012], [0.025, 0.046], [0.02, 0.058], [0.008, 0.063], [-0.008, 0.063], [-0.02, 0.058], [-0.025, 0.046]], -0.1, 0.13, 0.0015), b);
-  part(root, new THREE.BoxGeometry(0.0015, 0.024, 0.07), gunMats.dark, V3(0.0268, 0.03, -0.05));
-  part(root, new THREE.BoxGeometry(0.0012, 0.018, 0.066), gunMats.steel, V3(0.0266, 0.03, -0.05));
-  part(root, new THREE.BoxGeometry(0.03, 0.002, 0.09), gunMats.dark, V3(0, -0.013, -0.05));
-  part(root, new THREE.BoxGeometry(0.018, 0.004, 0.08), gunMats.steel, V3(0, -0.012, -0.05));
-  // pontet, détente, sûreté
-  part(root, ex([[-0.062, -0.012], [0.002, -0.012], [0.006, -0.05], [-0.058, -0.047]], 0.016, 0.001, [[[-0.054, -0.018], [-0.004, -0.018], [-0.002, -0.044], [-0.052, -0.041]]]), b);
-  part(root, ex([[-0.034, -0.014], [-0.028, -0.014], [-0.026, -0.036], [-0.032, -0.038]], 0.005, 0.0008), gunMats.steel);
+  part(root, ex(fillet(rectPts(0.012, 0.016, 0.086, 0.044), 0.004), 0.0008, 0).translate(0.0268, 0, 0), gunMats.dark);
+  part(root, ex(fillet(rectPts(0.018, 0.02, 0.08, 0.04), 0.002), 0.0008, 0.0003).translate(0.0275, 0, 0), st);
+  part(root, new THREE.BoxGeometry(0.0012, 0.004, 0.05), gunMats.dark, V3(0.0284, 0.03, -0.049));
+  part(root, new THREE.BoxGeometry(0.03, 0.001, 0.09), gunMats.dark, V3(0, -0.0141, -0.05));
+  part(root, new THREE.BoxGeometry(0.016, 0.001, 0.07), st, V3(0, -0.0148, -0.05));
+  part(root, latheX([[0, 0.13], [0.0165, 0.13], [0.0165, 0.142], [0.0128, 0.147], [0, 0.147]], 0.048, 22), b);
+  // plaque de détente, pontet arrondi, détente, sûreté
+  part(root, ex(soften([[-0.1, -0.012], [0.004, -0.012], [0.006, -0.03], [-0.004, -0.05], [-0.03, -0.056], [-0.058, -0.05], [-0.07, -0.036], [-0.1, -0.026]], 2, [0, 1, 7]), 0.018, 0.0012,
+    [soften([[-0.06, -0.018], [-0.004, -0.018], [-0.004, -0.03], [-0.012, -0.044], [-0.032, -0.049], [-0.052, -0.044], [-0.06, -0.032]], 2)]), b);
+  part(root, ex(soften([[-0.036, -0.013], [-0.029, -0.013], [-0.027, -0.024], [-0.024, -0.036], [-0.028, -0.04], [-0.032, -0.03]], 1, [0, 1]), 0.005, 0.0008), st);
   part(root, new THREE.CylinderGeometry(0.004, 0.004, 0.056, 12).rotateZ(PI / 2), gunMats.shellRed, V3(0, -0.006, 0.052));
-  // crosse pistolet quadrillée + plaque de couche
-  part(root, ex([[-0.1, 0.062], [-0.1, -0.012], [-0.118, -0.03], [-0.098, -0.13], [-0.138, -0.132], [-0.158, -0.042], [-0.46, -0.082], [-0.47, -0.064], [-0.47, 0.058], [-0.32, 0.05], [-0.14, 0.058]], 0.042, 0.005), p);
-  part(root, ex(rectPts(-0.495, -0.088, -0.47, 0.066), 0.047, 0.005), gunMats.rubber);
-  for (let i = 0; i < 6; i++) part(root, new THREE.BoxGeometry(0.049, 0.002, 0.004), gunMats.dark, V3(0, -0.072 + i * 0.025, 0.483));
-  part(root, new THREE.CylinderGeometry(0.006, 0.006, 0.006, 12).rotateZ(PI / 2), gunMats.steel, V3(-0.022, -0.06, 0.4));
+  // crosse pistolet galbée : poignée, busc, talon et pointe
+  const stk = ex(soften([[-0.1, 0.062], [-0.1, -0.012], [-0.112, -0.03], [-0.106, -0.07], [-0.1, -0.11], [-0.098, -0.128], [-0.108, -0.138], [-0.138, -0.138], [-0.148, -0.128], [-0.152, -0.09], [-0.16, -0.056], [-0.19, -0.034], [-0.25, -0.032], [-0.34, -0.05], [-0.44, -0.078], [-0.466, -0.084], [-0.47, -0.068], [-0.47, 0.05], [-0.466, 0.058], [-0.36, 0.05], [-0.22, 0.052], [-0.15, 0.06], [-0.12, 0.064]], 2, [0, 1, 16, 17]), 0.04, 0.005);
+  part(root, taperW(stk, x => 0.78 + 0.22 * (-0.1 - x) / 0.37), p);
+  part(root, ex(fillet([[-0.1, -0.136], [-0.146, -0.136], [-0.146, -0.142], [-0.104, -0.142]], 0.002), 0.03, 0.0015), b);
+  // plaque de couche caoutchouc rainurée, attache de sangle
+  part(root, ex(fillet([[-0.494, -0.09], [-0.47, -0.086], [-0.47, 0.058], [-0.494, 0.063]], [0.008, 0, 0, 0.008]), 0.044, 0.004), gunMats.rubber);
+  for (let i = 0; i < 7; i++) part(root, new THREE.BoxGeometry(0.054, 0.0016, 0.0275), gunMats.dark, V3(0, -0.072 + i * 0.02, 0.4858));
+  part(root, new THREE.CylinderGeometry(0.006, 0.006, 0.004, 12).rotateZ(PI / 2), st, V3(-0.0255, -0.06, 0.4));
   // canon, tube magasin, bouchon, collier
-  part(root, latheX([[0, 0.13], [0.0125, 0.13], [0.0118, 0.2], [0.0112, 0.64], [0, 0.64]], 0.048, 22), b);
+  part(root, latheX([[0, 0.147], [0.0125, 0.147], [0.0118, 0.2], [0.0112, 0.64], [0, 0.64]], 0.048, 22), b);
   part(root, latheX([[0, 0.13], [0.0135, 0.13], [0.0135, 0.555], [0, 0.555]], 0.014, 22), b);
-  part(root, latheX([[0, 0.555], [0.0158, 0.555], [0.0158, 0.585], [0.013, 0.592], [0, 0.592]], 0.014, 22), gunMats.steel);
-  part(root, new THREE.TorusGeometry(0.008, 0.0018, 6, 14), gunMats.steel, V3(0, -0.006, -0.575)).rotation.y = PI / 2;
-  part(root, xsec([[-0.017, 0.0], [0.017, 0.0], [0.017, 0.062], [-0.017, 0.062]], 0.535, 0.56, 0.001, [circ(0.0118, 0, 0.048, 16).reverse(), circ(0.0138, 0, 0.014, 16).reverse()]), b);
+  part(root, latheX([[0, 0.555], [0.0158, 0.555], [0.0158, 0.585], [0.013, 0.592], [0, 0.592]], 0.014, 22), st);
+  part(root, new THREE.TorusGeometry(0.008, 0.0018, 6, 14), st, V3(0, -0.006, -0.575)).rotation.y = PI / 2;
+  part(root, xsec(fillet([[-0.017, 0.0], [0.017, 0.0], [0.017, 0.062], [-0.017, 0.062]], 0.006), 0.535, 0.56, 0.001, [circ(0.0118, 0, 0.048, 16).reverse(), circ(0.0138, 0, 0.014, 16).reverse()]), b);
   part(root, new THREE.SphereGeometry(0.0038, 10, 8), gunMats.bright, P(0.628, 0.0625));
   addPicatinny(root, -0.08, 0.1, 0.063, 0.024);
   // porte-cartouches latéral
-  part(root, new THREE.BoxGeometry(0.006, 0.05, 0.14), p, V3(-0.029, 0.026, -0.012));
+  part(root, ex(fillet(rectPts(-0.058, 0.002, 0.082, 0.05), 0.005), 0.005, 0.001).translate(-0.0295, 0, 0), p);
   for (let i = 0; i < 6; i++) {
     const z = 0.046 - i * 0.023;
     part(root, new THREE.CylinderGeometry(0.0105, 0.0105, 0.046, 14), gunMats.shellRed, V3(-0.04, 0.033, z));
     part(root, new THREE.CylinderGeometry(0.011, 0.011, 0.014, 14), brassMat, V3(-0.04, 0.004, z));
     part(root, new THREE.CylinderGeometry(0.0095, 0.0095, 0.002, 12), gunMats.dark, V3(-0.04, 0.0565, z));
   }
-  // pompe rainurée
+  // pompe à anneaux saillants autour du tube magasin
   const pump = new THREE.Group(); root.add(pump);
-  part(pump, xsec(rrect(0.058, 0.052, 0.018, 0, 0.012, 4), 0.2, 0.39, 0.002, [circ(0.0142, 0, 0.014, 16).reverse()]), p);
-  for (let i = 0; i < 8; i++) for (const s of [-1, 1]) part(pump, new THREE.BoxGeometry(0.0015, 0.034, 0.005), gunMats.dark, V3(s * 0.0292, 0.012, -(0.22 + i * 0.02)));
+  part(pump, xsec(rrect(0.054, 0.048, 0.016, 0, 0.012, 4), 0.2, 0.39, 0.002, [circ(0.0142, 0, 0.014, 16).reverse()]), p);
+  const ridges = [];
+  for (let i = 0; i < 9; i++) ridges.push(xsec(rrect(0.06, 0.05, 0.018, 0, 0.01, 4), 0.214 + i * 0.019, 0.224 + i * 0.019, 0.0015));
+  part(pump, mergeGeometries(ridges), p);
   addMark(root, ['SG-12  12 GA 3in'], V3(-0.0272, 0.04, -0.05), 0.06, 0.012, 40);
   addSling(root, V3(-0.018, -0.006, -0.575), [V3(-0.05, -0.1, -0.5), V3(-0.08, -0.3, -0.2), V3(-0.1, -0.5, 0.1)]);
   const muzzle = P(0.65, 0.048);
   let sight;
   if (att.optic === 'irons') {
-    part(root, ex(rectPts(-0.075, 0.069, -0.045, 0.078), 0.028, 0.001), b);
+    part(root, ex(fillet(rectPts(-0.075, 0.069, -0.045, 0.078), 0.002), 0.028, 0.001), b);
     part(root, new THREE.TorusGeometry(0.0058, 0.0016, 10, 24), b, V3(0, 0.087, 0.06));
     for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.004, 0.02, 0.008), b, V3(s * 0.012, 0.083, 0.06));
-    part(root, ex(rectPts(0.6, 0.058, 0.625, 0.066), 0.012, 0.001), b);
-    part(root, new THREE.BoxGeometry(0.003, 0.022, 0.004), gunMats.steel, V3(0, 0.077, -0.615));
+    part(root, ex(fillet(rectPts(0.6, 0.058, 0.625, 0.066), 0.002), 0.012, 0.001), b);
+    part(root, new THREE.BoxGeometry(0.003, 0.022, 0.004), st, V3(0, 0.077, -0.615));
     part(root, new THREE.BoxGeometry(0.0014, 0.0014, 0.001), gunMats.tritium, V3(0, 0.0865, -0.6128));
     sight = { p: V3(0, 0.087, 0.06), dist: 0.2 };
   } else { const o = addOptic(root, att.optic, 0.01, 0.069); sight = { p: P(o.x, o.y), dist: 0.25 }; }
@@ -1543,37 +1625,42 @@ function buildShotgun(att) {
 // Pistolet P17 (pistolet à carcasse polymère)
 // ------------------------------------------------------------
 function buildPistol(att) {
-  const root = new THREE.Group(), b = gunMats.black, p = gunMats.poly;
-  // culasse : section chanfreinée, stries avant et arrière, fenêtre d'éjection
+  const root = new THREE.Group(), b = gunMats.black, p = gunMats.poly, st = gunMats.steel;
+  // culasse : section chanfreinée, nez biseauté, stries avant et arrière, fenêtre d'éjection, plaque arrière
   const slide = new THREE.Group(); root.add(slide);
   const sec = [[-0.0125, 0.034], [0.0125, 0.034], [0.0125, 0.056], [0.009, 0.0635], [-0.009, 0.0635], [-0.0125, 0.056]];
-  part(slide, xsec(sec, -0.056, 0.126, 0.0008), b);
-  part(slide, xsec([[-0.0125, 0.034], [0.0125, 0.034], [0.0125, 0.052], [0.006, 0.058], [-0.006, 0.058], [-0.0125, 0.052]], 0.126, 0.134, 0.0008), b);
+  part(slide, xsec(sec, -0.056, 0.122, 0.0008), b);
+  part(slide, xsec([[-0.0125, 0.034], [0.0125, 0.034], [0.0125, 0.05], [0.0065, 0.058], [-0.0065, 0.058], [-0.0125, 0.05]], 0.122, 0.134, 0.0008), b);
   for (let i = 0; i < 7; i++) for (const s of [-1, 1]) {
     part(slide, new THREE.BoxGeometry(0.0012, 0.018, 0.0018), gunMats.dark, V3(s * 0.0136, 0.046, 0.05 - i * 0.004));
     if (i < 5) part(slide, new THREE.BoxGeometry(0.0012, 0.014, 0.0018), gunMats.dark, V3(s * 0.0136, 0.048, -0.112 + i * 0.004));
   }
+  part(slide, xsec(fillet(rectPts(-0.0075, 0.038, 0.0075, 0.056), 0.002), -0.0578, -0.0568, 0), p);
   part(slide, new THREE.BoxGeometry(0.02, 0.0015, 0.036), gunMats.dark, V3(0.002, 0.0638, -0.02));
   part(slide, new THREE.BoxGeometry(0.015, 0.003, 0.034), gunMats.bright, V3(0.001, 0.062, -0.02));
-  part(slide, new THREE.BoxGeometry(0.0022, 0.004, 0.014), gunMats.steel, V3(0.0138, 0.056, -0.005));
+  part(slide, new THREE.BoxGeometry(0.0022, 0.004, 0.014), st, V3(0.0138, 0.056, -0.005));
   addMark(slide, ['P17  9x19'], V3(-0.0139, 0.046, -0.04), 0.045, 0.009, 50);
   // canon visible
   part(root, latheX([[0, 0.12], [0.0062, 0.12], [0.0062, 0.1348], [0.0036, 0.1348], [0.0036, 0.132], [0, 0.132]], 0.049, 16), gunMats.bright);
-  // carcasse, rail, poignée avec texture, pontet, détente à sûreté
-  part(root, ex(rectPts(-0.05, 0.02, 0.13, 0.034), 0.024, 0.002), p);
-  part(root, ex([[0.04, 0.02], [0.13, 0.02], [0.13, 0.006], [0.05, 0.006]], 0.024, 0.002), p);
+  // carcasse : cache-poussière avec rail, pontet carré, goupilles
+  part(root, ex(fillet([[-0.06, 0.034], [0.123, 0.034], [0.127, 0.024], [0.123, 0.008], [0.058, 0.006], [0.046, 0.004], [0.0, 0.012], [-0.06, 0.016]], [0.002, 0.004, 0.004, 0.003, 0.002, 0.002, 0.002, 0.002]), 0.022, 0.0015), p);
   for (let i = 0; i < 3; i++) part(root, new THREE.BoxGeometry(0.025, 0.004, 0.004), gunMats.dark, V3(0, 0.006, -(0.07 + i * 0.015)));
-  part(root, ex([[-0.056, 0.022], [0.006, 0.022], [0.002, 0.002], [-0.004, -0.02], [-0.012, -0.03], [-0.016, -0.05], [-0.022, -0.086], [-0.066, -0.082], [-0.062, -0.03], [-0.064, 0.008], [-0.062, 0.02]], 0.03, 0.004), p);
-  part(root, ex([[0.0, 0.012], [0.046, 0.012], [0.05, -0.012], [0.044, -0.022], [0.004, -0.022]], 0.02, 0.001, [[[0.008, 0.006], [0.038, 0.006], [0.04, -0.012], [0.01, -0.014]]]), p);
-  part(root, ex([[0.018, 0.004], [0.024, 0.004], [0.026, -0.014], [0.02, -0.016]], 0.006, 0.0006), p);
-  part(root, new THREE.BoxGeometry(0.0015, 0.008, 0.002), gunMats.dark, P(0.022, -0.004));
-  part(root, new THREE.BoxGeometry(0.004, 0.004, 0.014), b, V3(-0.0148, 0.03, -0.02));
+  part(root, ex(fillet([[0.0, 0.012], [0.049, 0.008], [0.049, -0.019], [0.044, -0.025], [0.006, -0.025], [-0.004, -0.014]], [0.002, 0.002, 0.003, 0.004, 0.006, 0.004]), 0.014, 0.0015,
+    [fillet([[0.008, 0.004], [0.041, 0.002], [0.042, -0.016], [0.038, -0.019], [0.01, -0.019], [0.004, -0.011]], 0.003)]), p);
+  part(root, ex(soften([[0.018, 0.004], [0.025, 0.004], [0.026, -0.004], [0.028, -0.014], [0.024, -0.017], [0.021, -0.008]], 1, [0, 1]), 0.006, 0.0006), p);
+  part(root, new THREE.BoxGeometry(0.0015, 0.008, 0.002), gunMats.dark, P(0.023, -0.004));
+  for (const [x, y] of [[0.012, 0.024], [-0.004, 0.02], [-0.05, 0.024]]) part(root, new THREE.CylinderGeometry(0.0017, 0.0017, 0.0265, 8).rotateZ(PI / 2), st, P(x, y));
+  // arrêtoir de culasse, levier de démontage, bouton de chargeur
+  part(root, ex(fillet([[0.004, 0.026], [0.026, 0.026], [0.03, 0.03], [0.026, 0.034], [0.004, 0.032]], 0.001), 0.002, 0.0004).translate(-0.0135, 0, 0), b);
   part(root, new THREE.BoxGeometry(0.003, 0.006, 0.006), b, V3(-0.0146, 0.028, -0.055));
+  part(root, new THREE.BoxGeometry(0.003, 0.006, 0.006), b, V3(0.0146, 0.028, -0.055));
   part(root, new THREE.BoxGeometry(0.005, 0.008, 0.008), p, V3(-0.0156, 0.004, -0.004));
+  // poignée texturée : rainures pour les doigts, queue de castor, puits évasé
+  part(root, ex(soften([[0.004, 0.014], [0.0, 0.0], [-0.006, -0.014], [-0.012, -0.024], [-0.01, -0.032], [-0.016, -0.043], [-0.014, -0.051], [-0.02, -0.061], [-0.018, -0.069], [-0.024, -0.08], [-0.02, -0.088], [-0.068, -0.086], [-0.068, -0.06], [-0.061, -0.03], [-0.062, -0.006], [-0.068, 0.01], [-0.075, 0.016], [-0.066, 0.021], [-0.056, 0.017]], 2, [0]), 0.029, 0.003), p);
   // chargeur (semelle visible)
   const mag = new THREE.Group(); root.add(mag);
   part(mag, ex([[-0.058, 0.018], [-0.026, 0.018], [-0.024, -0.082], [-0.06, -0.08]], 0.022, 0.001), b);
-  part(mag, ex([[-0.07, -0.08], [-0.018, -0.084], [-0.017, -0.094], [-0.07, -0.09]], 0.031, 0.002), p);
+  part(mag, ex(fillet([[-0.071, -0.083], [-0.018, -0.087], [-0.016, -0.095], [-0.071, -0.092]], 0.002), 0.031, 0.002), p);
   // organes de visée tritium
   part(slide, new THREE.BoxGeometry(0.004, 0.007, 0.006), b, P(0.118, 0.0665));
   part(slide, new THREE.SphereGeometry(0.0013, 8, 6), gunMats.tritium, P(0.1152, 0.0675));
