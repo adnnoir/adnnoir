@@ -244,7 +244,13 @@ namespace E7
             }
         }
 
-        void OnApplicationFocus(bool focus) { if (!focus && State == GameState.Playing) Pause(); }
+        // dans l'éditeur, cliquer sur la Console ou la Scène fait perdre le focus : on ne met en pause que dans le jeu compilé
+        void OnApplicationFocus(bool focus)
+        {
+#if !UNITY_EDITOR
+            if (!focus && State == GameState.Playing) Pause();
+#endif
+        }
 
         // ---------------- radio ----------------
         public void Radio(string text, string who, string[] parts)

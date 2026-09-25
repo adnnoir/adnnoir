@@ -19,7 +19,7 @@ namespace E7
         public WeaponSystem Weapons { get; private set; }
         Light lamp;
 
-        float yaw, pitch, tYaw, tPitch, roll;
+        float yaw, pitch, tYaw, tPitch;
         public float Crouch { get; private set; }
         public float Lean { get; private set; }
         public bool Sprinting { get; private set; }
@@ -92,7 +92,7 @@ namespace E7
         public void Spawn(Vector3 pos, float yawDeg, bool training)
         {
             cc.enabled = false; transform.position = pos; cc.enabled = true;
-            yaw = tYaw = yawDeg; pitch = tPitch = 0; roll = 0;
+            yaw = tYaw = yawDeg; pitch = tPitch = 0;
             Health = 100; Alive = true; Crouch = 0; Lean = 0; Velocity = Vector3.zero; Stamina = 1;
             HurtFx = BlindFx = shake = 0; DeathT = 0; DmgDirT = 0; crouchToggle = false;
             Head.localPosition = new Vector3(0, STAND_EYE, 0);
