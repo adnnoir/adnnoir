@@ -3569,9 +3569,18 @@ $('wipeSave').addEventListener('click', () => {
   wipeArm = 0; $('wipeSave').textContent = 'Progression effacée';
   renderDossier(); refreshMenuLabels();
 });
+let downloads = null;
+try { if (window.claude && window.claude.use) window.claude.use('downloads').then(d => { downloads = d; }).catch(() => {}); } catch (e) {}
+const flashBtn = (id, txt, back) => { $(id).textContent = txt; setTimeout(() => { $(id).textContent = back; }, 3000); };
 $('exportSave').addEventListener('click', () => {
   sfx.ui();
   const data = { game: 'entrepot7', v: 1, date: new Date().toISOString(), settings, character, loadout, career, best };
+  if (downloads) {
+    downloads.save({ filename: 'entrepot7-sauvegarde.json', data: JSON.stringify(data, null, 2) })
+      .then(() => flashBtn('exportSave', 'Sauvegarde exportée', 'Exporter la sauvegarde'))
+      .catch(err => { if (err && err.code !== 'declined') flashBtn('exportSave', 'Export indisponible ici', 'Exporter la sauvegarde'); });
+    return;
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
   a.download = 'entrepot7-sauvegarde.json'; a.click();
