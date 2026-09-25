@@ -164,6 +164,17 @@
   .stats dt { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
   .stats dd { margin: 2px 0 0; font: 700 19px var(--mono); font-variant-numeric: tabular-nums; }
   .stats dd.bad { color: var(--red); }
+  .saved { margin: 0; font: 600 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .saved::before { content: "● "; color: #6fd08c; }
+  /* Dossier */
+  .hist-wrap { max-height: 190px; overflow: auto; border: 1px solid var(--line); }
+  .hist { width: 100%; border-collapse: collapse; font: 12px var(--mono); font-variant-numeric: tabular-nums; }
+  .hist th { position: sticky; top: 0; background: #111417; text-align: left; font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 7px 10px; }
+  .hist td { padding: 6px 10px; border-top: 1px solid var(--line); color: #c9ced3; white-space: nowrap; }
+  .hist td.g { font: 800 16px var(--cond); color: var(--amber); }
+  .hist td.lost { color: var(--red); }
+  .hist .empty { color: var(--muted); text-align: center; padding: 16px; }
+  .danger { border-color: rgba(255, 90, 80, .5) !important; color: var(--red) !important; }
   .loading { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; background: var(--ink); }
   .loading p { font: 600 13px var(--mono); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
   .warn { margin: 0; font-size: 13px; color: var(--amber); }
@@ -213,6 +224,7 @@
       <button class="mi" type="button" id="trainBtn">Entraînement <small>stand de tir</small></button>
       <button class="mi" type="button" data-open="arsenal">Arsenal <small id="menuLoadout">CT-4 · P17</small></button>
       <button class="mi" type="button" data-open="perso">Personnage <small id="menuAgent">AGENT</small></button>
+      <button class="mi" type="button" data-open="dossier">Dossier <small id="menuCareer">aucune intervention</small></button>
       <button class="mi" type="button" data-open="settings">Paramètres</button>
     </nav>
     <p class="warn" id="touchWarn" hidden>Ce jeu se joue sur ordinateur, avec un clavier et une souris.</p>
@@ -398,10 +410,50 @@
         <div><dt>Tirs injustifiés</dt><dd id="stBad">0</dd></div>
         <div><dt>Meilleur score</dt><dd id="stBest">0</dd></div>
       </dl>
+      <p class="saved" id="endSaved">Progression sauvegardée dans ce navigateur</p>
       <div class="row">
         <button class="primary" id="againBtn" type="button">Recommencer</button>
         <button class="secondary" type="button" data-open="arsenal">Arsenal</button>
         <button class="secondary" id="menuBtn" type="button">Menu principal</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Dossier (sauvegarde de carrière) -->
+<section class="screen dim" id="dossier" hidden>
+  <div class="card">
+    <div class="tape"></div>
+    <div class="inner">
+      <span class="eyebrow" id="dosEyebrow">Dossier de l’agent</span>
+      <h2 id="dosTitle">Carrière</h2>
+      <dl class="stats">
+        <div><dt>Interventions</dt><dd id="dMissions">0</dd></div>
+        <div><dt>Réussies</dt><dd id="dWins">0</dd></div>
+        <div><dt>Meilleure note</dt><dd id="dGrade">—</dd></div>
+        <div><dt>Meilleur score</dt><dd id="dBest">0</dd></div>
+        <div><dt>Série de réussites</dt><dd id="dStreak">0</dd></div>
+        <div><dt>Temps en service</dt><dd id="dTime">0:00</dd></div>
+        <div><dt>Interpellés</dt><dd id="dArrests">0</dd></div>
+        <div><dt>Neutralisés</dt><dd id="dKills">0</dd></div>
+        <div><dt>Précision</dt><dd id="dAcc">0 %</dd></div>
+        <div><dt>Tirs à la tête</dt><dd id="dHeads">0</dd></div>
+        <div><dt>Tirs injustifiés</dt><dd id="dBad">0</dd></div>
+        <div><dt>Record stand de tir</dt><dd id="dTrain">—</dd></div>
+      </dl>
+      <div class="hist-wrap">
+        <table class="hist">
+          <thead><tr><th>Date</th><th>Note</th><th>Score</th><th>Durée</th><th>Interp.</th><th>Neutr.</th><th>Arme</th></tr></thead>
+          <tbody id="dHist"></tbody>
+        </table>
+      </div>
+      <p class="saved">Sauvegarde automatique dans ce navigateur après chaque intervention</p>
+      <div class="row">
+        <button class="primary" type="button" data-back>Retour</button>
+        <button class="secondary" type="button" id="exportSave">Exporter la sauvegarde</button>
+        <button class="secondary" type="button" id="importSave">Importer</button>
+        <button class="secondary danger" type="button" id="wipeSave">Effacer la progression</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
       </div>
     </div>
   </div>
@@ -448,6 +500,15 @@ const settings = Object.assign({}, SETTINGS_DEFAULT, loadJSON(SETTINGS_KEY));
 const saveSettings = () => saveJSON(SETTINGS_KEY, settings);
 let best = 0;
 try { best = Number(localStorage.getItem('e7-best') || 0); } catch (e) {}
+// Carrière : tout ce qui se garde d'une partie à l'autre
+const CAREER_KEY = 'e7-career-v1';
+const CAREER_DEFAULT = () => ({ missions: 0, wins: 0, arrests: 0, kills: 0, heads: 0, shots: 0, hits: 0, unjust: 0, time: 0, bestScore: 0, bestGrade: '', streak: 0, bestStreak: 0, train: { hits: 0, heads: 0, acc: 0 }, history: [] });
+const career = Object.assign(CAREER_DEFAULT(), loadJSON(CAREER_KEY));
+career.train = Object.assign(CAREER_DEFAULT().train, career.train);
+if (!Array.isArray(career.history)) career.history = [];
+const saveCareer = () => saveJSON(CAREER_KEY, career);
+best = Math.max(best, career.bestScore || 0);
+const GRADE_RANK = { S: 5, A: 4, B: 3, C: 2, D: 1, F: 0 };
 
 // ============================================================
 // Carte
@@ -1127,7 +1188,7 @@ const gunMats = {
   tube: new THREE.MeshPhysicalMaterial({ color: 0x26282c, metalness: 0.55, roughness: 0.42, clearcoat: 0.4, clearcoatRoughness: 0.35, side: THREE.DoubleSide, envMapIntensity: 1.0 }),
   glove: std({ color: GLOVES[character.gloves], roughness: 0.88, map: tex(fabricC, 2, 2), envMapIntensity: 0.2 }),
   sleeve: std({ color: UNIFORMS[character.uniform].top, roughness: 0.95, map: tex(fabricC, 3, 3), envMapIntensity: 0.1 }),
-  glass: new THREE.MeshPhysicalMaterial({ color: 0x3a3450, metalness: 0.1, roughness: 0.05, transparent: true, opacity: 0.16, envMapIntensity: 0.5, clearcoat: 0.6 }),
+  glass: new THREE.MeshPhysicalMaterial({ color: 0x9aa6d0, metalness: 0, roughness: 0.04, transparent: true, opacity: 0.07, depthWrite: false, envMapIntensity: 0.35 }),
   lens: new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0xfff2d8, emissiveIntensity: 3 }),
   dot: new THREE.MeshBasicMaterial({ color: new THREE.Color(6, 0.3, 0.2), toneMapped: false }),
   laserRed: new THREE.MeshBasicMaterial({ color: new THREE.Color(8, 0.4, 0.3), toneMapped: false }),
@@ -1201,7 +1262,6 @@ function addOptic(root, type, x, baseY) {
     part(root, latheX([[0.0185, -0.028], [0.0185, -0.024], [0.0172, -0.022], [0.0172, 0.02], [0.02, 0.023], [0.02, 0.03]], 0, 32).translate(0, cy, -x), gunMats.tube);
     part(root, new THREE.CylinderGeometry(0.0166, 0.0166, 0.05, 28, 1, true).rotateX(PI / 2), gunMats.dark, P(x, cy)).material = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 1, side: THREE.BackSide });
     part(root, new THREE.CircleGeometry(0.018, 28), gunMats.glass, P(x + 0.029, cy));
-    part(root, new THREE.CircleGeometry(0.0165, 28), gunMats.glass, P(x - 0.027, cy));
     // tourelles
     part(root, new THREE.CylinderGeometry(0.0075, 0.0075, 0.011, 16), b, V3(0, cy + 0.022, -x));
     part(root, new THREE.CylinderGeometry(0.0078, 0.0078, 0.004, 16), gunMats.poly, V3(0, cy + 0.029, -x));
@@ -1210,7 +1270,7 @@ function addOptic(root, type, x, baseY) {
     // cache avant relevé
     const cap = part(root, new THREE.CylinderGeometry(0.019, 0.019, 0.004, 24), gunMats.rubber, V3(0, cy + 0.02, -(x + 0.034)));
     cap.position.set(0, cy + 0.012, -(x + 0.046)); cap.rotation.x = 1.25;
-    part(root, new THREE.CircleGeometry(0.0011, 12), gunMats.dot, P(x + 0.026, cy));
+    part(root, new THREE.CircleGeometry(0.0013, 14), gunMats.dot, P(x + 0.026, cy));
     return { y: cy, x: x - 0.028 };
   }
   // holographique : cadre extrudé avec une vraie fenêtre
@@ -1232,7 +1292,7 @@ function addRMR(parent, x, baseY) {
   const inner = [[-0.009, baseY + 0.011], [0.009, baseY + 0.011], [0.009, baseY + 0.023], [0.005, baseY + 0.029], [-0.005, baseY + 0.029], [-0.009, baseY + 0.023]].reverse();
   part(parent, xsec(outer, x - 0.004, x + 0.016, 0.0006, [inner]), b);
   part(parent, new THREE.PlaneGeometry(0.018, 0.02), gunMats.glass, P(x + 0.015, baseY + 0.019));
-  part(parent, new THREE.CircleGeometry(0.0009, 10), gunMats.dot, P(x + 0.012, baseY + 0.019));
+  part(parent, new THREE.CircleGeometry(0.0011, 12), gunMats.dot, P(x + 0.012, baseY + 0.019));
   return { y: baseY + 0.019, x: x - 0.02 };
 }
 function addRail(root, type, lightPos, laserPos) {
@@ -1338,20 +1398,20 @@ function buildCarbine(att) {
   let sight;
   if (att.optic === 'irons') {
     part(root, ex(rectPts(-0.118, 0.08, -0.082, 0.088), 0.03, 0.001), b);
-    part(root, new THREE.TorusGeometry(0.0055, 0.0022, 8, 16), b, V3(0, 0.098, 0.1));
+    part(root, new THREE.TorusGeometry(0.0052, 0.0014, 10, 24), b, V3(0, 0.098, 0.1));
     part(root, new THREE.BoxGeometry(0.003, 0.01, 0.004), b, V3(0, 0.0895, 0.1));
     for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.004, 0.022, 0.006), b, V3(s * 0.011, 0.094, 0.1));
     part(root, ex(rectPts(0.405, 0.068, 0.43, 0.084), 0.028, 0.001), b);
     part(root, new THREE.BoxGeometry(0.0028, 0.013, 0.003), b, V3(0, 0.0925, -0.418));
     part(root, new THREE.BoxGeometry(0.0012, 0.0012, 0.001), gunMats.tritium, V3(0, 0.0985, -0.4165));
     for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.003, 0.018, 0.006), b, V3(s * 0.009, 0.094, -0.418));
-    sight = { p: V3(0, 0.098, 0.1), dist: 0.13 };
+    sight = { p: V3(0, 0.098, 0.1), dist: 0.2 };
   } else {
     part(root, ex(rectPts(0.41, 0.068, 0.432, 0.074), 0.02, 0.001), b);
-    const o = addOptic(root, att.optic, 0.03, 0.08); sight = { p: P(o.x, o.y), dist: 0.22 };
+    const o = addOptic(root, att.optic, 0.03, 0.08); sight = { p: P(o.x, o.y), dist: 0.25 };
   }
   const laser = addRail(root, att.rail, V3(-0.044, 0.03, -0.39), V3(0.048, 0.028, -0.37));
-  return finalize({ key: 'carbine', root, mag, magGrab: P(0.08, -0.13), handle, handleTravel: 0.06, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.13, -0.185, -0.43),
+  return finalize({ key: 'carbine', root, mag, magGrab: P(0.08, -0.13), handle, handleTravel: 0.06, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.12, -0.165, -0.41),
     grip: [V3(0.004, -0.078, 0.078), V3(-1.25, 0, -0.08)],
     poses: { guard: [V3(-0.012, -0.035, -0.33), V3(0.1, 0, 1.2)], mag: [V3(-0.02, -0.14, -0.08), V3(0.9, 0.2, 0.3)], pouch: POUCH, charge: [V3(-0.03, 0.075, 0.13), V3(-0.4, 0, 1.4)] },
     reload: magReload(1), preview: { dist: 1.45, center: 0.15 } });
@@ -1388,7 +1448,7 @@ function buildSMG(att) {
   part(root, xsec(hood, 0.318, 0.34, 0.0005, [circ(0.0095, 0, 0.079, 16).reverse()]), b);
   part(root, new THREE.BoxGeometry(0.0028, 0.012, 0.003), b, P(0.33, 0.075));
   // diopatre arrière : anneau + tambour
-  part(root, new THREE.TorusGeometry(0.0062, 0.0026, 8, 16), b, P(-0.1, 0.079));
+  part(root, new THREE.TorusGeometry(0.0056, 0.0015, 10, 24), b, P(-0.1, 0.079));
   for (const s of [-1, 1]) part(root, new THREE.CylinderGeometry(0.012, 0.012, 0.004, 16).rotateZ(PI / 2), b, V3(s * 0.011, 0.074, 0.1));
   part(root, ex(rectPts(-0.112, 0.062, -0.088, 0.07), 0.02, 0.001), b);
   if (att.optic !== 'irons') { part(root, ex(rectPts(-0.07, 0.063, 0.09, 0.068), 0.03, 0.001), b); addPicatinny(root, -0.07, 0.09, 0.068, 0.022); }
@@ -1408,10 +1468,10 @@ function buildSMG(att) {
   if (att.muzzle === 'suppressor') muzzle = addSuppressor(root, 0.415, 0.036, 0.019, 0.15);
   else muzzle = P(0.42, 0.036);
   let sight;
-  if (att.optic === 'irons') sight = { p: P(-0.1, 0.079), dist: 0.12 };
-  else { const o = addOptic(root, att.optic, 0.01, 0.078); sight = { p: P(o.x, o.y), dist: 0.22 }; }
+  if (att.optic === 'irons') sight = { p: P(-0.1, 0.079), dist: 0.19 };
+  else { const o = addOptic(root, att.optic, 0.01, 0.078); sight = { p: P(o.x, o.y), dist: 0.25 }; }
   const laser = addRail(root, att.rail, V3(-0.044, 0.03, -0.29), V3(0.046, 0.03, -0.29));
-  return finalize({ key: 'smg', root, mag, magGrab: P(0.1, -0.1), handle, handleTravel: 0.05, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.12, -0.17, -0.39),
+  return finalize({ key: 'smg', root, mag, magGrab: P(0.1, -0.1), handle, handleTravel: 0.05, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.11, -0.152, -0.37),
     grip: [V3(0.004, -0.068, 0.045), V3(-1.25, 0, -0.08)],
     poses: { guard: [V3(-0.012, -0.03, -0.27), V3(0.1, 0, 1.2)], mag: [V3(-0.02, -0.12, -0.1), V3(0.9, 0.2, 0.3)], pouch: POUCH, charge: [V3(-0.045, 0.074, -0.3), V3(-0.4, 0, 1.4)] },
     reload: magReload(1.05), preview: { dist: 1.2, center: 0.05 } });
@@ -1463,15 +1523,15 @@ function buildShotgun(att) {
   let sight;
   if (att.optic === 'irons') {
     part(root, ex(rectPts(-0.075, 0.069, -0.045, 0.078), 0.028, 0.001), b);
-    part(root, new THREE.TorusGeometry(0.006, 0.0024, 8, 16), b, V3(0, 0.087, 0.06));
+    part(root, new THREE.TorusGeometry(0.0058, 0.0016, 10, 24), b, V3(0, 0.087, 0.06));
     for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.004, 0.02, 0.008), b, V3(s * 0.012, 0.083, 0.06));
     part(root, ex(rectPts(0.6, 0.058, 0.625, 0.066), 0.012, 0.001), b);
     part(root, new THREE.BoxGeometry(0.003, 0.022, 0.004), gunMats.steel, V3(0, 0.077, -0.615));
     part(root, new THREE.BoxGeometry(0.0014, 0.0014, 0.001), gunMats.tritium, V3(0, 0.0865, -0.6128));
-    sight = { p: V3(0, 0.087, 0.06), dist: 0.14 };
-  } else { const o = addOptic(root, att.optic, 0.01, 0.069); sight = { p: P(o.x, o.y), dist: 0.22 }; }
+    sight = { p: V3(0, 0.087, 0.06), dist: 0.2 };
+  } else { const o = addOptic(root, att.optic, 0.01, 0.069); sight = { p: P(o.x, o.y), dist: 0.25 }; }
   const laser = addRail(root, att.rail, V3(-0.04, 0.03, -0.54), V3(0.046, 0.03, -0.54));
-  return finalize({ key: 'shotgun', root, mag: null, pump, pumpTravel: 0.075, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.13, -0.19, -0.44),
+  return finalize({ key: 'shotgun', root, mag: null, pump, pumpTravel: 0.075, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.12, -0.17, -0.42),
     grip: [V3(0.004, -0.078, 0.124), V3(-1.25, 0, -0.08)],
     poses: { guard: [V3(-0.01, -0.04, -0.3), V3(0.1, 0, 1.2)], port: [V3(0.0, -0.085, -0.04), V3(1.1, 0, 0.4)], pouch: POUCH, mag: [V3(0.0, -0.085, -0.04), V3(1.1, 0, 0.4)], charge: [V3(-0.01, -0.04, -0.3), V3(0.1, 0, 1.2)] },
     preview: { dist: 1.55, center: 0.12 } });
@@ -1590,7 +1650,7 @@ const vmRim = new THREE.DirectionalLight(0xbcd0ff, 0.9); vmRim.position.set(-0.6
 const vmKey = new THREE.DirectionalLight(0xdfe6ee, 1.8); vmKey.position.set(-0.4, 1, 0.25);
 const vmFill = new THREE.DirectionalLight(0xffe2c0, 0.4); vmFill.position.set(0.6, -0.2, -0.5);
 const vmFlash = new THREE.PointLight(0xffb060, 0, 2, 2);
-const vmLamp = new THREE.PointLight(0xfff2d8, 0, 2.2, 2); vmLamp.position.set(0.0, 0.12, -1.35);
+const vmLamp = new THREE.PointLight(0xfff2d8, 0, 2.2, 2); vmLamp.position.set(0.22, -0.32, -0.7);
 gunScene.add(vmHemi, vmKey, vmFill, vmFlash, vmLamp, vmRim);
 
 const viewCache = new Map();
@@ -3191,7 +3251,7 @@ function updateGun(dt, t) {
   const qL = new THREE.Quaternion().setFromUnitVectors(V3(0, 0, 1), (pis ? V3(-0.45, -0.6, 0.7) : V3(-0.35, -0.75, 0.55)).normalize());
   leftSleeve.quaternion.copy(qArm.invert().multiply(qL));
   vmCam.fov = lerp(50, 38, adsT); vmCam.updateProjectionMatrix();
-  vmKey.intensity = 1.8; vmRim.intensity = 0.9;
+  vmKey.intensity = 1.8; vmRim.intensity = 0.9 * (1 - adsT * 0.8);
 }
 function updateLaser() {
   const on = state === 'play' && W && W.laser && lampOn && !switchState && player.alive;
@@ -3227,7 +3287,7 @@ function updateWorld(dt, t) {
   lamp.intensity = lampOn ? 28 : 0;
   gunMats.lens.emissiveIntensity = lampOn ? 3 : 0;
   gunMats.laserRed.color.setRGB(lampOn ? 8 : 0.3, lampOn ? 0.4 : 0.02, lampOn ? 0.3 : 0.02);
-  vmLamp.intensity = lampOn ? 1.1 : 0;
+  vmLamp.intensity = lampOn ? 0.35 : 0;
   let env = 0;
   for (const fx of fixtures) if (fx.light.intensity > 0) { const d = fx.light.position.distanceTo(camera.position); env += fx.light.intensity / (d * d + 2); }
   vmHemi.intensity = 0.42 + clamp(env * 0.1, 0, 1.0);
@@ -3302,7 +3362,7 @@ function updateFps(dt) {
 // ============================================================
 // Écrans et menus
 // ============================================================
-const SCREENS = ['menu', 'brief', 'arsenal', 'perso', 'settings', 'pause', 'end'];
+const SCREENS = ['menu', 'brief', 'arsenal', 'perso', 'settings', 'pause', 'end', 'dossier'];
 const backStack = [];
 function show(id) {
   uiScreen = id;
@@ -3311,6 +3371,7 @@ function show(id) {
   $('hud').hidden = !(id === null || overPause);
   if (id === 'arsenal') { arsenalView = arsenalView || loadout.primary; renderArsenal(); equipView(arsenalView); setHandsVisible(false); }
   if (id === 'perso') { syncPersoUI(); }
+  if (id === 'dossier') renderDossier();
   if (officer) officer.root.visible = id === 'perso';
   if (AC) musicLevel(id === null ? 0 : state === 'pause' ? 0.35 : id === 'end' ? 0.7 : 1);
   refreshMenuLabels();
@@ -3325,6 +3386,7 @@ function goBack() {
 function refreshMenuLabels() {
   $('menuLoadout').textContent = WEAPONS[loadout.primary].short + ' · ' + WEAPONS.pistol.short;
   $('menuAgent').textContent = (character.name || 'AGENT') + ' · ' + (character.unit || '0000');
+  $('menuCareer').textContent = career.missions ? career.missions + ' intervention' + (career.missions > 1 ? 's' : '') + (career.bestGrade ? ' · meilleure note ' + career.bestGrade : '') : 'aucune intervention';
   $('agentLine').textContent = 'AGENT ' + (character.name || '—') + ' · UNITÉ ' + (character.unit || '0000');
   const a = loadout.att[loadout.primary];
   $('briefLoadout').innerHTML = `Équipement : <b>${WEAPONS[loadout.primary].name}</b> (${ATT_LABEL[a.optic]}, ${ATT_LABEL[a.muzzle]}, ${ATT_LABEL[a.rail]}) · <b>${WEAPONS.pistol.name}</b> · 2 grenades flash`;
@@ -3448,6 +3510,7 @@ function pause() {
 }
 function resume() { sfx.ui(true); state = 'play'; lookGrace = performance.now() + 250; backStack.length = 0; setHandsVisible(true); weaponHolder.position.set(0, 0, 0); equipView(curKey()); show(null); if (AC) AC.resume().catch(() => {}); requestLock(); }
 function toMenu() {
+  recordTraining();
   state = 'menu'; backStack.length = 0;
   mode = 'mission';
   resetGame('mission');
@@ -3456,6 +3519,80 @@ function toMenu() {
   if (AC) AC.resume().catch(() => {});
   try { speechSynthesis.cancel(); } catch (e) {}
 }
+function recordMission(won, score, g) {
+  const c = career;
+  c.missions++; if (won) c.wins++;
+  c.arrests += stats.arrests; c.kills += stats.kills; c.heads += stats.heads;
+  c.shots += stats.shots; c.hits += stats.hits; c.unjust += stats.unjust; c.time += Math.round(stats.time);
+  c.bestScore = Math.max(c.bestScore, score);
+  if ((GRADE_RANK[g] ?? 0) > (GRADE_RANK[c.bestGrade] ?? -1)) c.bestGrade = g;
+  c.streak = won ? c.streak + 1 : 0; c.bestStreak = Math.max(c.bestStreak, c.streak);
+  c.history.unshift({ d: Date.now(), won, g, score, time: Math.round(stats.time), arrests: stats.arrests, kills: stats.kills, w: loadout.primary });
+  c.history.length = Math.min(c.history.length, 30);
+  saveCareer();
+}
+function recordTraining() {
+  if (mode !== 'training' || train.hits <= 0) return;
+  const acc = train.shots ? Math.round(Math.min(train.hits, train.shots) / train.shots * 100) : 0;
+  if (train.hits > career.train.hits || (train.hits === career.train.hits && acc > career.train.acc)) { career.train = { hits: train.hits, heads: train.heads, acc }; saveCareer(); }
+}
+const fmtTime = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60; return h ? h + ' h ' + String(m).padStart(2, '0') : m + ':' + String(r).padStart(2, '0'); };
+function renderDossier() {
+  const c = career;
+  $('dosTitle').textContent = 'Agent ' + (character.name || '—');
+  $('dosEyebrow').textContent = 'Dossier de l’agent · unité ' + (character.unit || '0000');
+  $('dMissions').textContent = c.missions; $('dWins').textContent = c.wins;
+  $('dGrade').textContent = c.bestGrade || '—'; $('dBest').textContent = best;
+  $('dStreak').textContent = c.streak + (c.bestStreak > c.streak ? ' (max ' + c.bestStreak + ')' : '');
+  $('dTime').textContent = fmtTime(c.time);
+  $('dArrests').textContent = c.arrests; $('dKills').textContent = c.kills;
+  $('dAcc').textContent = (c.shots ? Math.round(Math.min(c.hits, c.shots) / c.shots * 100) : 0) + ' %';
+  $('dHeads').textContent = c.heads;
+  $('dBad').textContent = c.unjust; $('dBad').classList.toggle('bad', c.unjust > 0);
+  $('dTrain').textContent = c.train.hits ? c.train.hits + ' · ' + c.train.acc + ' %' : '—';
+  const body = $('dHist');
+  if (!c.history.length) { body.innerHTML = '<tr><td class="empty" colspan="7">Aucune intervention pour l’instant. Lance-toi !</td></tr>'; return; }
+  body.replaceChildren(...c.history.map(h => {
+    const tr = document.createElement('tr');
+    const d = new Date(h.d);
+    const cells = [d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }), h.g, h.score, fmtTime(h.time), h.arrests, h.kills, (WEAPONS[h.w] || WEAPONS.carbine).short];
+    cells.forEach((v, i) => { const td = document.createElement('td'); td.textContent = v; if (i === 1) td.className = h.won ? 'g' : 'g lost'; tr.append(td); });
+    return tr;
+  }));
+}
+let wipeArm = 0;
+$('wipeSave').addEventListener('click', () => {
+  sfx.ui();
+  if (performance.now() - wipeArm > 4000) { wipeArm = performance.now(); $('wipeSave').textContent = 'Sûr ? Clique encore'; setTimeout(() => { $('wipeSave').textContent = 'Effacer la progression'; }, 4000); return; }
+  Object.assign(career, CAREER_DEFAULT()); saveCareer();
+  best = 0; try { localStorage.removeItem('e7-best'); } catch (e) {}
+  wipeArm = 0; $('wipeSave').textContent = 'Progression effacée';
+  renderDossier(); refreshMenuLabels();
+});
+$('exportSave').addEventListener('click', () => {
+  sfx.ui();
+  const data = { game: 'entrepot7', v: 1, date: new Date().toISOString(), settings, character, loadout, career, best };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+  a.download = 'entrepot7-sauvegarde.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+$('importSave').addEventListener('click', () => { sfx.ui(); $('importFile').click(); });
+$('importFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (!data || data.game !== 'entrepot7') throw new Error('format');
+    if (data.settings) saveJSON(SETTINGS_KEY, data.settings);
+    if (data.character) saveJSON(CHAR_KEY, data.character);
+    if (data.loadout) saveJSON(LOAD_KEY, data.loadout);
+    if (data.career) saveJSON(CAREER_KEY, data.career);
+    if (data.best) localStorage.setItem('e7-best', String(Number(data.best) || 0));
+    location.reload();
+  } catch (err) { $('importSave').textContent = 'Fichier invalide'; setTimeout(() => { $('importSave').textContent = 'Importer'; }, 3000); }
+});
+addEventListener('pagehide', () => { try { recordTraining(); } catch (e) {} });
 function computeScore(won) {
   const acc = stats.shots ? stats.hits / stats.shots : 0;
   let s = stats.arrests * 250 + stats.kills * 100 + stats.heads * 25 - stats.unjust * 400 - Math.round(stats.dmg * 1.5);
@@ -3468,6 +3605,7 @@ function finish(won) {
   if (document.pointerLockElement) document.exitPointerLock();
   const score = computeScore(won);
   if (score > best) { best = score; try { localStorage.setItem('e7-best', String(best)); } catch (e) {} }
+  recordMission(won, score, grade(score, won));
   const m = Math.floor(stats.time / 60), s = Math.floor(stats.time % 60);
   $('endEyebrow').textContent = won ? 'Fin d’intervention · caméra coupée' : 'Transmission interrompue';
   $('endTitle').textContent = won ? 'Zone sécurisée' : 'Agent à terre';
