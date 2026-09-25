@@ -1,0 +1,50 @@
+{
+ "gunMetal": {
+  "key": "gunMetal",
+  "kind": "std",
+  "color": "#1f2022",
+  "lin": [
+   0.013702083043526807,
+   0.014443843592229466,
+   0.015996293361446288
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.6,
+  "roughness": 0.45
+ },
+ "gunWood": {
+  "key": "gunWood",
+  "kind": "std",
+  "color": "#6b3e1f",
+  "lin": [
+   0.14702726648767014,
+   0.04817182422013895,
+   0.013702083043526807
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.6
+ },
+ "gunTan": {
+  "key": "gunTan",
+  "kind": "std",
+  "color": "#8a7556",
+  "lin": [
+   0.2541520943200296,
+   0.17788841597328695,
+   0.09305896283800832
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.7
+ }
+}

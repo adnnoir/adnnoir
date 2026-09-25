@@ -1,0 +1,251 @@
+{
+ "floor": {
+  "key": "floor",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 1,
+  "map": {
+   "name": "concrete",
+   "repeat": [
+    14,
+    9
+   ]
+  },
+  "normalMap": {
+   "name": "concrete_n",
+   "repeat": [
+    14,
+    9
+   ]
+  },
+  "normalScale": 0.7,
+  "roughnessMap": {
+   "name": "concreteRough",
+   "repeat": [
+    8,
+    5.142857142857143
+   ]
+  }
+ },
+ "wall": {
+  "key": "wall",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.95,
+  "map": {
+   "name": "wall",
+   "repeat": [
+    1,
+    1
+   ]
+  },
+  "normalMap": {
+   "name": "wall_n",
+   "repeat": [
+    1,
+    1
+   ]
+  },
+  "normalScale": 1
+ },
+ "ceil": {
+  "key": "ceil",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.95,
+  "map": {
+   "name": "ceil",
+   "repeat": [
+    18.666666666666668,
+    12
+   ]
+  }
+ },
+ "crate": {
+  "key": "crate",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.85,
+  "map": {
+   "name": "crate",
+   "repeat": [
+    1,
+    1
+   ]
+  },
+  "normalMap": {
+   "name": "crate_n",
+   "repeat": [
+    1,
+    1
+   ]
+  },
+  "normalScale": 1
+ },
+ "rackPost": {
+  "key": "rackPost",
+  "kind": "std",
+  "color": "#b2501c",
+  "lin": [
+   0.4452011945063733,
+   0.08021982030622662,
+   0.011612245176281512
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.5,
+  "roughness": 0.55
+ },
+ "rackShelf": {
+  "key": "rackShelf",
+  "kind": "std",
+  "color": "#55585c",
+  "lin": [
+   0.09084171117479915,
+   0.09758734713304495,
+   0.10702310296918527
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.6,
+  "roughness": 0.6
+ },
+ "card": {
+  "key": "card",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.9,
+  "map": {
+   "name": "card",
+   "repeat": [
+    1,
+    1
+   ]
+  }
+ },
+ "steel": {
+  "key": "steel",
+  "kind": "std",
+  "color": "#3d4146",
+  "lin": [
+   0.04666508633021928,
+   0.05286064701616471,
+   0.061246054224174035
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.7,
+  "roughness": 0.5
+ },
+ "barrel": {
+  "key": "barrel",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.5,
+  "roughness": 0.6,
+  "map": {
+   "name": "barrel",
+   "repeat": [
+    1,
+    1
+   ]
+  }
+ },
+ "housing": {
+  "key": "housing",
+  "kind": "std",
+  "color": "#2a2b2d",
+  "lin": [
+   0.023153366173251363,
+   0.024157632443547246,
+   0.026241221889696346
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.4,
+  "roughness": 0.7
+ },
+ "wood": {
+  "key": "wood",
+  "kind": "std",
+  "color": "#6b4f33",
+  "lin": [
+   0.14702726648767014,
+   0.07818742179702069,
+   0.033104766565152086
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.9
+ }
+}

@@ -1,0 +1,395 @@
+{
+ "pants": {
+  "key": "pants",
+  "kind": "std",
+  "color": "#2c3a55",
+  "lin": [
+   0.025186859622305935,
+   0.04231141061442144,
+   0.09084171117479915
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.92,
+  "map": {
+   "name": "denim",
+   "repeat": [
+    3,
+    3
+   ]
+  },
+  "normalMap": {
+   "name": "pants_n",
+   "repeat": [
+    3,
+    3
+   ]
+  },
+  "normalScale": 1
+ },
+ "strap": {
+  "key": "strap",
+  "kind": "std",
+  "color": "#1e1f1c",
+  "lin": [
+   0.012983032338510335,
+   0.013702083043526807,
+   0.011612245176281512
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.8
+ },
+ "top": {
+  "key": "top",
+  "kind": "std",
+  "color": "#2d3440",
+  "lin": [
+   0.026241221889696346,
+   0.0343398068028541,
+   0.05126945836711539
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.93,
+  "map": {
+   "name": "fabric",
+   "repeat": [
+    3,
+    3
+   ]
+  },
+  "normalMap": {
+   "name": "top_n",
+   "repeat": [
+    3,
+    3
+   ]
+  },
+  "normalScale": 1
+ },
+ "mask": {
+  "key": "mask",
+  "kind": "std",
+  "color": "#121214",
+  "lin": [
+   0.006048833020386069,
+   0.006048833020386069,
+   0.0069954101845983935
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.97,
+  "map": {
+   "name": "fabric",
+   "repeat": [
+    3,
+    3
+   ]
+  },
+  "normalMap": {
+   "name": "top_n",
+   "repeat": [
+    3,
+    3
+   ]
+  },
+  "normalScale": 1
+ },
+ "skin": {
+  "key": "skin",
+  "kind": "std",
+  "color": "#c59a7a",
+  "lin": [
+   0.5583403896257968,
+   0.3231432091022285,
+   0.19461783043107173
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.6
+ },
+ "eyeWhite": {
+  "key": "eyeWhite",
+  "kind": "std",
+  "color": "#cfc8bc",
+  "lin": [
+   0.623960391667596,
+   0.5775804404214573,
+   0.5028864580233624
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.3
+ },
+ "eye": {
+  "key": "eye",
+  "kind": "std",
+  "color": "#1a120c",
+  "lin": [
+   0.010329823026364548,
+   0.006048833020386069,
+   0.0036765073221525194
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.2
+ },
+ "glove": {
+  "key": "glove",
+  "kind": "std",
+  "color": "#121214",
+  "lin": [
+   0.006048833020386069,
+   0.006048833020386069,
+   0.0069954101845983935
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.9
+ },
+ "shoe": {
+  "key": "shoe",
+  "kind": "std",
+  "color": "#dedede",
+  "lin": [
+   0.7304607400847158,
+   0.7304607400847158,
+   0.7304607400847158
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.7
+ },
+ "sole": {
+  "key": "sole",
+  "kind": "std",
+  "color": "#e8e4dc",
+  "lin": [
+   0.8069522576650873,
+   0.775822218312646,
+   0.7156935005005721
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.8
+ },
+ "vest": {
+  "key": "vest",
+  "kind": "std",
+  "color": "#3b3f2f",
+  "lin": [
+   0.04373502925049377,
+   0.04970656597728775,
+   0.028426039499072558
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.85,
+  "map": {
+   "name": "fabric",
+   "repeat": [
+    3,
+    3
+   ]
+  },
+  "normalMap": {
+   "name": "top_n",
+   "repeat": [
+    3,
+    3
+   ]
+  },
+  "normalScale": 1
+ },
+ "cap": {
+  "key": "cap",
+  "kind": "std",
+  "color": "#151515",
+  "lin": [
+   0.007499032040460618,
+   0.007499032040460618,
+   0.007499032040460618
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.8
+ },
+ "gunMetal": {
+  "key": "gunMetal",
+  "kind": "std",
+  "color": "#1f2022",
+  "lin": [
+   0.013702083043526807,
+   0.014443843592229466,
+   0.015996293361446288
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.6,
+  "roughness": 0.45
+ },
+ "vestFront": {
+  "key": "vestFront",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.85,
+  "map": {
+   "name": "vestFront_map",
+   "repeat": [
+    1,
+    1
+   ]
+  }
+ },
+ "vestBack": {
+  "key": "vestBack",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.85,
+  "map": {
+   "name": "vestBack_map",
+   "repeat": [
+    1,
+    1
+   ]
+  }
+ },
+ "gaiter": {
+  "key": "gaiter",
+  "kind": "std",
+  "color": "#16181b",
+  "lin": [
+   0.008023192982520563,
+   0.009134058699157796,
+   0.010960094003125918
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.93,
+  "map": {
+   "name": "fabric",
+   "repeat": [
+    3,
+    3
+   ]
+  },
+  "normalMap": {
+   "name": "top_n",
+   "repeat": [
+    3,
+    3
+   ]
+  },
+  "normalScale": 1
+ },
+ "glasses": {
+  "key": "glasses",
+  "kind": "std",
+  "color": "#0a0c0e",
+  "lin": [
+   0.0030352698352941175,
+   0.0036765073221525194,
+   0.004391442035325718
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.6,
+  "roughness": 0.08
+ },
+ "darkSole": {
+  "key": "darkSole",
+  "kind": "std",
+  "color": "#151515",
+  "lin": [
+   0.007499032040460618,
+   0.007499032040460618,
+   0.007499032040460618
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.9
+ },
+ "helmet": {
+  "key": "helmet",
+  "kind": "std",
+  "color": "#1c1e21",
+  "lin": [
+   0.011612245176281512,
+   0.012983032338510335,
+   0.015208514418949472
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.1,
+  "roughness": 0.6
+ }
+}

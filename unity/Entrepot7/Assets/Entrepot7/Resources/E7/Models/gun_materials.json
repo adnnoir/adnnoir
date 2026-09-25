@@ -1,0 +1,573 @@
+{
+ "black": {
+  "key": "black",
+  "kind": "std",
+  "color": "#2b2d31",
+  "lin": [
+   0.024157632443547246,
+   0.026241221889696346,
+   0.030713443727452196
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.5,
+  "roughness": 0.46,
+  "clearcoat": 0.35,
+  "roughnessMap": {
+   "name": "gunWear",
+   "repeat": [
+    3,
+    3
+   ]
+  }
+ },
+ "steel": {
+  "key": "steel",
+  "kind": "std",
+  "color": "#3e4146",
+  "lin": [
+   0.04817182422013895,
+   0.05286064701616471,
+   0.061246054224174035
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.8,
+  "roughness": 0.38,
+  "roughnessMap": {
+   "name": "brush",
+   "repeat": [
+    8,
+    2
+   ]
+  }
+ },
+ "poly": {
+  "key": "poly",
+  "kind": "std",
+  "color": "#2a2b2e",
+  "lin": [
+   0.023153366173251363,
+   0.024157632443547246,
+   0.02732089163382382
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.05,
+  "roughness": 0.82,
+  "normalMap": {
+   "name": "poly_n",
+   "repeat": [
+    28,
+    28
+   ]
+  },
+  "normalScale": 0.35
+ },
+ "tan": {
+  "key": "tan",
+  "kind": "std",
+  "color": "#8b7757",
+  "lin": [
+   0.25818285291079235,
+   0.1844749944900301,
+   0.09530746662221588
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.02,
+  "roughness": 0.78,
+  "normalMap": {
+   "name": "poly_n",
+   "repeat": [
+    28,
+    28
+   ]
+  },
+  "normalScale": 0.45
+ },
+ "dark": {
+  "key": "dark",
+  "kind": "std",
+  "color": "#0b0b0c",
+  "lin": [
+   0.0033465357620980074,
+   0.0033465357620980074,
+   0.0036765073221525194
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.9
+ },
+ "rubber": {
+  "key": "rubber",
+  "kind": "std",
+  "color": "#19191a",
+  "lin": [
+   0.00972121731707524,
+   0.00972121731707524,
+   0.010329823026364548
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.95
+ },
+ "strap": {
+  "key": "strap",
+  "kind": "std",
+  "color": "#1c1d1f",
+  "lin": [
+   0.011612245176281512,
+   0.012286488353353374,
+   0.013702083043526807
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.92,
+  "map": {
+   "name": "fabric",
+   "repeat": [
+    1,
+    12
+   ]
+  }
+ },
+ "mark_d107a73": {
+  "key": "mark_d107a73",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": true,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.3,
+  "roughness": 0.55,
+  "map": {
+   "name": "mark_d107a73_map",
+   "repeat": [
+    1,
+    1
+   ]
+  }
+ },
+ "mark_77503cc": {
+  "key": "mark_77503cc",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": true,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.3,
+  "roughness": 0.55,
+  "map": {
+   "name": "mark_77503cc_map",
+   "repeat": [
+    1,
+    1
+   ]
+  }
+ },
+ "tritium": {
+  "key": "tritium",
+  "kind": "basic",
+  "color": "#aaffbc",
+  "lin": [
+   0.4,
+   1.6,
+   0.5
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false
+ },
+ "lens": {
+  "key": "lens",
+  "kind": "std",
+  "color": "#222222",
+  "lin": [
+   0.015996293361446288,
+   0.015996293361446288,
+   0.015996293361446288
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 1,
+  "emissive": [
+   1,
+   0.8879231178794776,
+   0.6866853124288864
+  ],
+  "emissiveIntensity": 3
+ },
+ "bright": {
+  "key": "bright",
+  "kind": "std",
+  "color": "#a9adb3",
+  "lin": [
+   0.3967552307153359,
+   0.4178850708380236,
+   0.450785782828426
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 1,
+  "roughness": 0.2,
+  "roughnessMap": {
+   "name": "brush",
+   "repeat": [
+    8,
+    2
+   ]
+  }
+ },
+ "tube": {
+  "key": "tube",
+  "kind": "std",
+  "color": "#26282c",
+  "lin": [
+   0.019382360952473074,
+   0.02121901037134225,
+   0.025186859622305935
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": true,
+  "metalness": 0.55,
+  "roughness": 0.42,
+  "clearcoat": 0.4
+ },
+ "mark_30": {
+  "key": "mark_30",
+  "kind": "std",
+  "color": "#050505",
+  "lin": [
+   0.0015176349176470587,
+   0.0015176349176470587,
+   0.0015176349176470587
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 1
+ },
+ "glass": {
+  "key": "glass",
+  "kind": "std",
+  "color": "#9aa6d0",
+  "lin": [
+   0.3231432091022285,
+   0.3813260114221238,
+   0.6307571363387763
+  ],
+  "opacity": 0.07,
+  "transparent": true,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.04
+ },
+ "dot": {
+  "key": "dot",
+  "kind": "basic",
+  "color": "#ff957c",
+  "lin": [
+   6,
+   0.3,
+   0.2
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false
+ },
+ "holo": {
+  "key": "holo",
+  "kind": "basic",
+  "color": "#ffffff",
+  "lin": [
+   4,
+   1.3,
+   1
+  ],
+  "opacity": 1,
+  "transparent": true,
+  "additive": true,
+  "doubleSide": false,
+  "map": {
+   "name": "holo",
+   "repeat": [
+    1,
+    1
+   ]
+  }
+ },
+ "laserRed": {
+  "key": "laserRed",
+  "kind": "basic",
+  "color": "#ffaa95",
+  "lin": [
+   8,
+   0.4,
+   0.3
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false
+ },
+ "mark_36670635": {
+  "key": "mark_36670635",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": true,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.3,
+  "roughness": 0.55,
+  "map": {
+   "name": "mark_36670635_map",
+   "repeat": [
+    1,
+    1
+   ]
+  }
+ },
+ "mark_84028a1": {
+  "key": "mark_84028a1",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": true,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.3,
+  "roughness": 0.55,
+  "map": {
+   "name": "mark_84028a1_map",
+   "repeat": [
+    1,
+    1
+   ]
+  }
+ },
+ "mark_31": {
+  "key": "mark_31",
+  "kind": "std",
+  "color": "#050505",
+  "lin": [
+   0.0015176349176470587,
+   0.0015176349176470587,
+   0.0015176349176470587
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 1
+ },
+ "shellRed": {
+  "key": "shellRed",
+  "kind": "std",
+  "color": "#9a1b1b",
+  "lin": [
+   0.3231432091022285,
+   0.010960094003125918,
+   0.010960094003125918
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.45
+ },
+ "brass": {
+  "key": "brass",
+  "kind": "std",
+  "color": "#b08a3c",
+  "lin": [
+   0.43415363616478553,
+   0.2541520943200296,
+   0.04518620437910499
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 1,
+  "roughness": 0.35
+ },
+ "mark_8176815e": {
+  "key": "mark_8176815e",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": true,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.3,
+  "roughness": 0.55,
+  "map": {
+   "name": "mark_8176815e_map",
+   "repeat": [
+    1,
+    1
+   ]
+  }
+ },
+ "mark_32": {
+  "key": "mark_32",
+  "kind": "std",
+  "color": "#050505",
+  "lin": [
+   0.0015176349176470587,
+   0.0015176349176470587,
+   0.0015176349176470587
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 1
+ },
+ "mark_ed5f432f": {
+  "key": "mark_ed5f432f",
+  "kind": "std",
+  "color": "#ffffff",
+  "lin": [
+   1,
+   1,
+   1
+  ],
+  "opacity": 1,
+  "transparent": true,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.3,
+  "roughness": 0.55,
+  "map": {
+   "name": "mark_ed5f432f_map",
+   "repeat": [
+    1,
+    1
+   ]
+  }
+ },
+ "glove": {
+  "key": "glove",
+  "kind": "std",
+  "color": "#17181a",
+  "lin": [
+   0.008568125615105716,
+   0.009134058699157796,
+   0.010329823026364548
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.88,
+  "map": {
+   "name": "fabric",
+   "repeat": [
+    2,
+    2
+   ]
+  }
+ },
+ "watch": {
+  "key": "watch",
+  "kind": "std",
+  "color": "#0c0c0c",
+  "lin": [
+   0.0036765073221525194,
+   0.0036765073221525194,
+   0.0036765073221525194
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0.4,
+  "roughness": 0.4
+ },
+ "sleeve": {
+  "key": "sleeve",
+  "kind": "std",
+  "color": "#1d2736",
+  "lin": [
+   0.012286488353353374,
+   0.02028856305209031,
+   0.036889450395083165
+  ],
+  "opacity": 1,
+  "transparent": false,
+  "additive": false,
+  "doubleSide": false,
+  "metalness": 0,
+  "roughness": 0.95,
+  "map": {
+   "name": "fabric",
+   "repeat": [
+    3,
+    3
+   ]
+  }
+ }
+}
