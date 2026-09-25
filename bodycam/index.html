@@ -1103,23 +1103,40 @@ const saveLoadout = () => saveJSON(LOAD_KEY, loadout);
 // ============================================================
 // Modèles des armes à la première personne
 // ============================================================
+// --- matériaux des armes : anodisé, polymère granuleux, acier ---
+const stippleC = makeCanvas(128, 128, (g, w, h) => {
+  g.fillStyle = '#808080'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 2600; i++) { const x = Math.random() * w, y = Math.random() * h; g.fillStyle = Math.random() < 0.5 ? '#b8b8b8' : '#484848'; g.beginPath(); g.arc(x, y, rand(0.7, 1.8), 0, 7); g.fill(); }
+});
+const brushC = makeCanvas(256, 64, (g, w, h) => {
+  g.fillStyle = '#909090'; g.fillRect(0, 0, w, h);
+  for (let y = 0; y < h; y++) { const v = 128 + rand(-30, 30); g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(0, y, w, 1); }
+  blotches(g, w, h, 30, '230,230,230', 2, 8, 0.6);
+});
+const stippleN = tex(normalFrom(stippleC, 3.5), 28, 28, false);
+const wearR = tex(gunWearC, 3, 3, false);
+const brushR = tex(brushC, 8, 2, false);
 const gunMats = {
-  black: std({ color: 0x2a2c30, metalness: 0.55, roughness: 0.42, roughnessMap: tex(gunWearC, 2, 2, false), envMapIntensity: 0.6 }),
-  tan: std({ color: 0x8a7556, metalness: 0.05, roughness: 0.72, envMapIntensity: 0.3 }),
-  poly: std({ color: 0x33353a, metalness: 0.1, roughness: 0.7, envMapIntensity: 0.3 }),
-  rubber: std({ color: 0x1a1a1b, roughness: 0.95, envMapIntensity: 0.1 }),
-  steel: std({ color: 0x4a4d52, metalness: 0.85, roughness: 0.3, envMapIntensity: 0.9 }),
-  tube: std({ color: 0x25272b, metalness: 0.6, roughness: 0.4, side: THREE.DoubleSide, envMapIntensity: 0.6 }),
+  black: new THREE.MeshPhysicalMaterial({ color: 0x2b2d31, metalness: 0.5, roughness: 0.46, roughnessMap: wearR, clearcoat: 0.35, clearcoatRoughness: 0.45, envMapIntensity: 1.0 }),
+  tan: std({ color: 0x8b7757, metalness: 0.02, roughness: 0.78, normalMap: stippleN, normalScale: new THREE.Vector2(0.45, 0.45), envMapIntensity: 0.35 }),
+  poly: std({ color: 0x2a2b2e, metalness: 0.05, roughness: 0.82, normalMap: stippleN, normalScale: new THREE.Vector2(0.35, 0.35), envMapIntensity: 0.25 }),
+  rubber: std({ color: 0x19191a, roughness: 0.95, envMapIntensity: 0.15 }),
+  steel: std({ color: 0x3e4146, metalness: 0.8, roughness: 0.38, roughnessMap: brushR, envMapIntensity: 1.0 }),
+  bright: std({ color: 0xa9adb3, metalness: 1, roughness: 0.2, roughnessMap: brushR, envMapIntensity: 1.3 }),
+  dark: std({ color: 0x0b0b0c, roughness: 0.9, envMapIntensity: 0.05 }),
+  tube: new THREE.MeshPhysicalMaterial({ color: 0x26282c, metalness: 0.55, roughness: 0.42, clearcoat: 0.4, clearcoatRoughness: 0.35, side: THREE.DoubleSide, envMapIntensity: 1.0 }),
   glove: std({ color: GLOVES[character.gloves], roughness: 0.88, map: tex(fabricC, 2, 2), envMapIntensity: 0.2 }),
   sleeve: std({ color: UNIFORMS[character.uniform].top, roughness: 0.95, map: tex(fabricC, 3, 3), envMapIntensity: 0.1 }),
-  glass: new THREE.MeshStandardMaterial({ color: 0x2a3a40, metalness: 0.9, roughness: 0.05, transparent: true, opacity: 0.32, envMapIntensity: 1.2 }),
+  glass: new THREE.MeshPhysicalMaterial({ color: 0x3a3450, metalness: 0.1, roughness: 0.05, transparent: true, opacity: 0.16, envMapIntensity: 0.5, clearcoat: 0.6 }),
   lens: new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0xfff2d8, emissiveIntensity: 3 }),
   dot: new THREE.MeshBasicMaterial({ color: new THREE.Color(6, 0.3, 0.2), toneMapped: false }),
   laserRed: new THREE.MeshBasicMaterial({ color: new THREE.Color(8, 0.4, 0.3), toneMapped: false }),
   white: new THREE.MeshBasicMaterial({ color: 0xd8d8d8 }),
-  shellRed: std({ color: 0x9a1b1b, roughness: 0.5, envMapIntensity: 0.3 }),
+  tritium: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.4, 1.6, 0.5), toneMapped: false }),
+  shellRed: std({ color: 0x9a1b1b, roughness: 0.45, envMapIntensity: 0.4 }),
   watch: std({ color: 0x0c0c0c, metalness: 0.4, roughness: 0.4 }),
   bang: std({ color: 0x3b4430, roughness: 0.6, metalness: 0.3 }),
+  strap: std({ color: 0x1c1d1f, roughness: 0.92, map: tex(fabricC, 1, 12), envMapIntensity: 0.1 }),
 };
 const holoC = makeCanvas(128, 128, g => {
   g.strokeStyle = '#ff3a26'; g.lineWidth = 5; g.beginPath(); g.arc(64, 64, 46, 0, 7); g.stroke();
@@ -1131,55 +1148,119 @@ const ex = (pts, w, bevel = 0.002, holesPts = []) => extrudeSide(shape(pts, hole
 const cylZ = (r1, r2, len, seg = 16) => new THREE.CylinderGeometry(r1, r2, len, seg).rotateX(PI / 2);
 function part(parent, geo, mat, pos) { const m = new THREE.Mesh(geo, mat); if (pos) m.position.copy(pos); parent.add(m); return m; }
 const POUCH = [V3(-0.16, -0.45, 0.02), V3(0.9, 0.3, 0.2)];
+// section transversale (vue de face, x/y) extrudée le long de l'arme, entre les positions a et b (vers l'avant)
+function xsec(pts, a, b, bevel = 0.0012, holesPts = []) {
+  const g = new THREE.ExtrudeGeometry(shape(pts, holesPts), { depth: b - a, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments: 10 });
+  g.translate(0, 0, -b);
+  return g;
+}
+function rrect(w, h, r, cx = 0, cy = 0, seg = 4) {
+  const pts = [], hw = w / 2 - r, hh = h / 2 - r;
+  for (const [ox, oy, a0] of [[hw, hh, 0], [-hw, hh, PI / 2], [-hw, -hh, PI], [hw, -hh, PI * 1.5]]) for (let i = 0; i <= seg; i++) { const a = a0 + i / seg * PI / 2; pts.push([cx + ox + Math.cos(a) * r, cy + oy + Math.sin(a) * r]); }
+  return pts;
+}
+function octo(w, h, c, cx = 0, cy = 0) { const x = w / 2, y = h / 2; return [[cx - x + c, cy - y], [cx + x - c, cy - y], [cx + x, cy - y + c], [cx + x, cy + y - c], [cx + x - c, cy + y], [cx - x + c, cy + y], [cx - x, cy + y - c], [cx - x, cy - y + c]]; }
+function circ(r, cx = 0, cy = 0, n = 20) { const p = []; for (let i = 0; i < n; i++) { const a = i / n * PI * 2; p.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } return p; }
+// tour (canon, cache-flamme…) : profil [rayon, position vers l'avant]
+function latheX(profile, yc, seg = 24) { const g = new THREE.LatheGeometry(profile.map(([r, x]) => new THREE.Vector2(r, x)), seg); g.rotateX(-PI / 2); g.translate(0, yc, 0); return g; }
+// marquages gravés
+function markCanvas(lines, size = 30) {
+  return makeCanvas(512, 128, (g, w, h) => {
+    g.fillStyle = 'rgba(210,210,205,.78)'; g.font = `600 ${size}px "IBM Plex Mono", monospace`; g.textBaseline = 'middle';
+    lines.forEach((l, i) => g.fillText(l, 8, h / (lines.length + 1) * (i + 1)));
+  });
+}
+function addMark(root, lines, pos, wm, hm, size) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(wm, hm), new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(markCanvas(lines, size)), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, roughness: 0.55, metalness: 0.3 }));
+  m.position.copy(pos); m.rotation.y = -PI / 2; root.add(m); return m;
+}
+// rail Picatinny (base + dents)
+function addPicatinny(root, x0, x1, y, width = 0.022) {
+  part(root, xsec(rrect(width, 0.006, 0.001, 0, y + 0.003, 1), x0, x1, 0.0006), gunMats.black);
+  for (let x = x0 + 0.003; x < x1 - 0.004; x += 0.01) part(root, xsec(octo(width + 0.002, 0.004, 0.0012, 0, y + 0.008), x, x + 0.0052, 0.0004), gunMats.black);
+}
+// sangle qui pend depuis un point d'attache
+function addSling(root, from, pts) {
+  const curve = new THREE.CatmullRomCurve3([from, ...pts]);
+  const g = new THREE.ExtrudeGeometry(shape(rectPts(-0.0016, -0.0125, 0.0016, 0.0125)), { steps: 40, bevelEnabled: false, extrudePath: curve });
+  const m = part(root, g, gunMats.strap); m.userData.sling = true;
+  part(root, new THREE.TorusGeometry(0.009, 0.0022, 6, 12), gunMats.steel, from.clone()).userData.sling = true;
+  root.userData.slings = root.children.filter(c => c.userData.sling);
+  return m;
+}
 
 function addOptic(root, type, x, baseY) {
   const b = gunMats.black;
   if (type === 'reddot') {
-    part(root, ex(rectPts(x - 0.027, baseY, x + 0.027, baseY + 0.014), 0.036), b);
+    // micro point rouge sur montage haut (type T-2)
+    part(root, xsec(rrect(0.03, 0.01, 0.002, 0, baseY + 0.005, 2), x - 0.024, x + 0.024, 0.0008), b);
+    part(root, xsec([[-0.012, baseY + 0.01], [0.012, baseY + 0.01], [0.009, baseY + 0.02], [-0.009, baseY + 0.02]], x - 0.018, x + 0.018, 0.0008), b);
+    part(root, new THREE.BoxGeometry(0.01, 0.006, 0.02), b, V3(0.019, baseY + 0.006, -x));
+    part(root, new THREE.CylinderGeometry(0.004, 0.004, 0.012, 10).rotateZ(PI / 2), gunMats.steel, V3(0.02, baseY + 0.006, -(x + 0.012)));
     const cy = baseY + 0.038;
-    part(root, new THREE.CylinderGeometry(0.021, 0.021, 0.07, 24, 1, true).rotateX(PI / 2), gunMats.tube, P(x, cy));
-    for (const dx of [-0.036, 0.036]) part(root, new THREE.TorusGeometry(0.021, 0.004, 8, 24), b, P(x + dx, cy));
-    part(root, new THREE.CircleGeometry(0.02, 24), gunMats.glass, P(x + 0.03, cy));
-    part(root, new THREE.CylinderGeometry(0.008, 0.008, 0.012, 12).rotateZ(PI / 2), b, V3(0.026, cy, -x));
-    part(root, new THREE.CylinderGeometry(0.008, 0.008, 0.012, 12), b, V3(0, cy + 0.026, -x));
-    part(root, new THREE.CircleGeometry(0.0011, 12), gunMats.dot, P(x + 0.028, cy));
-    return { y: cy, x: x - 0.036 };
+    part(root, latheX([[0.0185, -0.028], [0.0185, -0.024], [0.0172, -0.022], [0.0172, 0.02], [0.02, 0.023], [0.02, 0.03]], 0, 32).translate(0, cy, -x), gunMats.tube);
+    part(root, new THREE.CylinderGeometry(0.0166, 0.0166, 0.05, 28, 1, true).rotateX(PI / 2), gunMats.dark, P(x, cy)).material = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 1, side: THREE.BackSide });
+    part(root, new THREE.CircleGeometry(0.018, 28), gunMats.glass, P(x + 0.029, cy));
+    part(root, new THREE.CircleGeometry(0.0165, 28), gunMats.glass, P(x - 0.027, cy));
+    // tourelles
+    part(root, new THREE.CylinderGeometry(0.0075, 0.0075, 0.011, 16), b, V3(0, cy + 0.022, -x));
+    part(root, new THREE.CylinderGeometry(0.0078, 0.0078, 0.004, 16), gunMats.poly, V3(0, cy + 0.029, -x));
+    part(root, new THREE.CylinderGeometry(0.0075, 0.0075, 0.011, 16).rotateZ(PI / 2), b, V3(0.022, cy, -x));
+    part(root, new THREE.CylinderGeometry(0.006, 0.006, 0.014, 14).rotateZ(PI / 2), b, V3(-0.021, cy - 0.004, -(x - 0.008)));
+    // cache avant relevé
+    const cap = part(root, new THREE.CylinderGeometry(0.019, 0.019, 0.004, 24), gunMats.rubber, V3(0, cy + 0.02, -(x + 0.034)));
+    cap.position.set(0, cy + 0.012, -(x + 0.046)); cap.rotation.x = 1.25;
+    part(root, new THREE.CircleGeometry(0.0011, 12), gunMats.dot, P(x + 0.026, cy));
+    return { y: cy, x: x - 0.028 };
   }
-  // holographique
-  part(root, ex(rectPts(x - 0.045, baseY, x + 0.035, baseY + 0.013), 0.034), b);
-  part(root, ex(rectPts(x + 0.012, baseY + 0.013, x + 0.035, baseY + 0.022), 0.03), b);
-  const wy = baseY + 0.036;
-  part(root, ex(rectPts(x - 0.03, wy + 0.021, x + 0.03, wy + 0.025), 0.046, 0.001), b);
-  for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.003, 0.044, 0.06), b, V3(s * 0.0215, wy, -x));
-  part(root, new THREE.PlaneGeometry(0.04, 0.036), gunMats.glass, P(x + 0.03, wy));
-  part(root, new THREE.PlaneGeometry(0.03, 0.03), holoMat, P(x + 0.026, wy));
-  part(root, new THREE.BoxGeometry(0.006, 0.008, 0.01), gunMats.poly, V3(0.025, baseY + 0.02, -(x - 0.03)));
-  return { y: wy, x: x - 0.032 };
+  // holographique : cadre extrudé avec une vraie fenêtre
+  part(root, xsec(rrect(0.034, 0.014, 0.002, 0, baseY + 0.007, 2), x - 0.05, x + 0.035, 0.001), b);
+  part(root, xsec(rrect(0.03, 0.012, 0.003, 0, baseY + 0.02, 2), x + 0.008, x + 0.035, 0.001), b);
+  for (let i = 0; i < 3; i++) part(root, new THREE.BoxGeometry(0.007, 0.004, 0.006), gunMats.rubber, V3(-0.007 + i * 0.007, baseY + 0.015, -(x - 0.043)));
+  const wy = baseY + 0.037;
+  const outer = rrect(0.044, 0.042, 0.008, 0, wy + 0.002, 4), inner = rrect(0.034, 0.03, 0.004, 0, wy, 3).reverse();
+  part(root, xsec(outer, x - 0.028, x + 0.028, 0.0008, [inner]), b);
+  part(root, new THREE.PlaneGeometry(0.034, 0.03), gunMats.glass, P(x + 0.027, wy));
+  part(root, new THREE.PlaneGeometry(0.03, 0.03), holoMat, P(x + 0.022, wy));
+  part(root, new THREE.BoxGeometry(0.004, 0.012, 0.012), b, V3(0.024, wy - 0.004, -x));
+  return { y: wy, x: x - 0.028 };
 }
 function addRMR(parent, x, baseY) {
   const b = gunMats.black;
-  part(parent, new THREE.BoxGeometry(0.026, 0.006, 0.042), b, P(x, baseY + 0.003));
-  for (const s of [-1, 1]) part(parent, new THREE.BoxGeometry(0.004, 0.026, 0.036), b, V3(s * 0.011, baseY + 0.019, -x));
-  part(parent, new THREE.BoxGeometry(0.026, 0.005, 0.02), b, P(x + 0.008, baseY + 0.033));
-  part(parent, new THREE.PlaneGeometry(0.018, 0.02), gunMats.glass, P(x + 0.012, baseY + 0.02));
-  part(parent, new THREE.CircleGeometry(0.0009, 10), gunMats.dot, P(x + 0.011, baseY + 0.02));
-  return { y: baseY + 0.02, x: x - 0.02 };
+  part(parent, xsec(rrect(0.026, 0.007, 0.002, 0, baseY + 0.0035, 2), x - 0.022, x + 0.02, 0.0006), b);
+  const outer = [[-0.013, baseY + 0.007], [0.013, baseY + 0.007], [0.013, baseY + 0.024], [0.008, baseY + 0.033], [-0.008, baseY + 0.033], [-0.013, baseY + 0.024]];
+  const inner = [[-0.009, baseY + 0.011], [0.009, baseY + 0.011], [0.009, baseY + 0.023], [0.005, baseY + 0.029], [-0.005, baseY + 0.029], [-0.009, baseY + 0.023]].reverse();
+  part(parent, xsec(outer, x - 0.004, x + 0.016, 0.0006, [inner]), b);
+  part(parent, new THREE.PlaneGeometry(0.018, 0.02), gunMats.glass, P(x + 0.015, baseY + 0.019));
+  part(parent, new THREE.CircleGeometry(0.0009, 10), gunMats.dot, P(x + 0.012, baseY + 0.019));
+  return { y: baseY + 0.019, x: x - 0.02 };
 }
 function addRail(root, type, lightPos, laserPos) {
-  part(root, cylZ(0.016, 0.016, 0.095), gunMats.black, lightPos);
-  part(root, cylZ(0.02, 0.018, 0.02), gunMats.black, lightPos.clone().add(V3(0, 0, -0.0575)));
-  const lens = part(root, new THREE.CircleGeometry(0.017, 16), gunMats.lens, lightPos.clone().add(V3(0, 0, -0.0677))); lens.rotation.y = PI;
-  part(root, new THREE.BoxGeometry(0.012, 0.01, 0.03), gunMats.poly, lightPos.clone().add(V3(0, -0.017, 0.03)));
+  // lampe tactique : corps, tête crantée, lentille, interrupteur
+  const lp = lightPos;
+  part(root, latheX([[0, -0.05], [0.014, -0.05], [0.015, -0.046], [0.015, 0.02], [0.019, 0.026], [0.02, 0.046], [0.018, 0.05], [0, 0.05]], 0, 24).translate(lp.x, lp.y, lp.z), gunMats.black);
+  for (let i = 0; i < 8; i++) { const a = i / 8 * PI * 2; part(root, new THREE.BoxGeometry(0.003, 0.003, 0.018), gunMats.black, V3(lp.x + Math.cos(a) * 0.0205, lp.y + Math.sin(a) * 0.0205, lp.z - 0.036)); }
+  const lens = part(root, new THREE.CircleGeometry(0.017, 20), gunMats.lens, lp.clone().add(V3(0, 0, -0.0505))); lens.rotation.y = PI;
+  part(root, new THREE.TorusGeometry(0.0175, 0.0015, 6, 20), gunMats.bright, lp.clone().add(V3(0, 0, -0.05)));
+  part(root, new THREE.BoxGeometry(0.012, 0.008, 0.024), gunMats.rubber, lp.clone().add(V3(0, -0.017, 0.035)));
+  part(root, new THREE.BoxGeometry(0.008, 0.006, 0.03), gunMats.black, lp.clone().add(V3(lp.x < 0 ? 0.014 : -0.014, 0, 0)));
   if (type !== 'laser') return null;
-  part(root, new THREE.BoxGeometry(0.03, 0.024, 0.056), gunMats.tan, laserPos);
-  part(root, new THREE.BoxGeometry(0.01, 0.006, 0.01), gunMats.poly, laserPos.clone().add(V3(0, 0.015, 0.01)));
-  part(root, cylZ(0.004, 0.004, 0.004), gunMats.laserRed, laserPos.clone().add(V3(0.006, 0.004, -0.03)));
-  return laserPos.clone().add(V3(0.006, 0.004, -0.033));
+  const b = part(root, xsec(rrect(0.03, 0.024, 0.003, laserPos.x, laserPos.y, 2), -laserPos.z - 0.028, -laserPos.z + 0.028, 0.0008), gunMats.tan);
+  part(root, new THREE.BoxGeometry(0.01, 0.006, 0.012), gunMats.rubber, laserPos.clone().add(V3(0, 0.015, 0.012)));
+  part(root, cylZ(0.0045, 0.0045, 0.006, 12), gunMats.black, laserPos.clone().add(V3(0.006, 0.004, -0.03)));
+  part(root, cylZ(0.0025, 0.0025, 0.004, 10), gunMats.laserRed, laserPos.clone().add(V3(0.006, 0.004, -0.033)));
+  return laserPos.clone().add(V3(0.006, 0.004, -0.036));
 }
 function addSuppressor(root, x0, y, r, len) {
-  part(root, cylZ(r, r, len, 22), gunMats.black, P(x0 + len / 2, y));
-  part(root, cylZ(r * 0.5, r * 0.5, 0.004, 12), gunMats.rubber, P(x0 + len + 0.001, y));
-  for (const k of [0.2, 0.8]) part(root, cylZ(r + 0.0012, r + 0.0012, 0.006, 22), gunMats.steel, P(x0 + len * k, y));
+  part(root, latheX([[0, x0], [r * 0.7, x0], [r, x0 + 0.01], [r, x0 + len - 0.008], [r * 0.9, x0 + len], [r * 0.25, x0 + len], [r * 0.25, x0 + len - 0.004], [0, x0 + len - 0.004]], y, 28), gunMats.black);
+  for (let i = 0; i < 12; i++) part(root, cylZ(r + 0.0007, r + 0.0007, 0.0025, 28), gunMats.steel, P(x0 + 0.012 + i * 0.0035, y));
+  part(root, cylZ(r * 0.25, r * 0.25, 0.002, 12), gunMats.dark, P(x0 + len - 0.003, y));
+  return P(x0 + len + 0.01, y);
+}
+function addBirdcage(root, x0, y, r = 0.0115, len = 0.056) {
+  part(root, latheX([[0, x0], [r, x0], [r, x0 + len], [r * 0.72, x0 + len], [r * 0.72, x0 + len - 0.004], [0, x0 + len - 0.004]], y, 20), gunMats.black);
+  for (let i = 0; i < 5; i++) { const a = PI / 2 + (i - 2) * 0.7; part(root, new THREE.BoxGeometry(0.0035, 0.0035, len * 0.55), gunMats.dark, V3(Math.cos(a) * r * 0.98, y + Math.sin(a) * r * 0.98, -(x0 + len * 0.55))); }
+  part(root, cylZ(r * 0.72, r * 0.72, 0.002, 16), gunMats.dark, P(x0 + len - 0.003, y));
   return P(x0 + len + 0.01, y);
 }
 function magReload(s = 1) {
@@ -1197,157 +1278,259 @@ function pistolReload() {
 }
 function finalize(W) { W.root.traverse(m => { if (m.isMesh) { m.castShadow = false; m.frustumCulled = false; } }); return W; }
 
+// ------------------------------------------------------------
+// Carabine CT-4 (famille AR-15)
+// ------------------------------------------------------------
 function buildCarbine(att) {
   const root = new THREE.Group(), b = gunMats.black, t = gunMats.tan, p = gunMats.poly;
-  part(root, ex([[-0.12, -0.03], [0.12, -0.03], [0.125, 0.02], [-0.125, 0.02]], 0.052), b);
-  part(root, ex([[0.03, -0.03], [0.105, -0.03], [0.108, -0.075], [0.028, -0.075]], 0.05), b);
-  part(root, ex([[-0.035, -0.03], [0.03, -0.03], [0.03, -0.068], [-0.035, -0.06], [-0.035, -0.055], [0.022, -0.06], [0.022, -0.035], [-0.03, -0.035]], 0.012, 0.001), b);
-  part(root, ex([[-0.075, -0.03], [-0.035, -0.03], [-0.058, -0.145], [-0.1, -0.14], [-0.098, -0.12]], 0.034, 0.004), t);
+  // carcasse inférieure : corps, puits de chargeur évasé, pontet, détente
+  part(root, ex([[-0.128, 0.02], [-0.128, -0.02], [-0.118, -0.03], [0.03, -0.03], [0.034, -0.02], [0.118, -0.02], [0.126, -0.006], [0.126, 0.02]], 0.05, 0.0025), b);
+  part(root, ex([[0.028, -0.02], [0.108, -0.02], [0.112, -0.078], [0.116, -0.084], [0.02, -0.084], [0.024, -0.078]], 0.052, 0.0025), b);
+  part(root, ex([[0.05, -0.05], [0.1, -0.05], [0.1, -0.06], [0.05, -0.06]], 0.0535, 0.001), b);
+  part(root, ex([[-0.04, -0.03], [0.03, -0.03], [0.032, -0.07], [-0.036, -0.062]], 0.012, 0.0015, [[[-0.032, -0.036], [0.024, -0.036], [0.025, -0.063], [-0.03, -0.056]]]), b);
+  part(root, ex([[-0.004, -0.03], [0.002, -0.03], [0.004, -0.05], [-0.002, -0.052], [-0.004, -0.045]], 0.005, 0.0008), gunMats.steel);
+  // sélecteur, arrêtoir, bouton chargeur, goupilles
+  const sel = part(root, new THREE.BoxGeometry(0.004, 0.006, 0.02), b, V3(-0.0295, 0.008, 0.043)); sel.rotation.x = -0.2;
+  part(root, new THREE.CylinderGeometry(0.006, 0.006, 0.004, 14).rotateZ(PI / 2), b, V3(-0.0285, 0.008, 0.035));
+  part(root, new THREE.BoxGeometry(0.004, 0.02, 0.012), b, V3(-0.0285, -0.004, -0.035));
+  part(root, new THREE.CylinderGeometry(0.005, 0.005, 0.006, 12).rotateZ(PI / 2), gunMats.poly, V3(0.0285, -0.004, -0.028));
+  for (const x of [-0.108, 0.112]) for (const s of [-1, 1]) part(root, new THREE.CylinderGeometry(0.003, 0.003, 0.003, 10).rotateZ(PI / 2), gunMats.steel, V3(s * 0.028, 0.012, -x));
+  // poignée ergonomique
+  part(root, ex([[-0.078, -0.03], [-0.034, -0.03], [-0.036, -0.045], [-0.05, -0.1], [-0.058, -0.146], [-0.078, -0.15], [-0.1, -0.143], [-0.096, -0.12], [-0.088, -0.07], [-0.086, -0.04]], 0.034, 0.005), t);
+  // carcasse supérieure, assistance à la fermeture, déflecteur, capot d'éjection
   part(root, ex([[-0.13, 0.02], [0.13, 0.02], [0.13, 0.066], [-0.13, 0.066]], 0.046, 0.003), b);
-  part(root, ex(rectPts(-0.13, 0.066, 0.13, 0.074), 0.03, 0.001), b);
-  for (let i = 0; i < 16; i++) { const x = -0.12 + i * 0.016; part(root, ex(rectPts(x, 0.074, x + 0.008, 0.08), 0.03, 0), b); }
-  part(root, new THREE.BoxGeometry(0.004, 0.022, 0.07), p, V3(0.024, 0.043, -0.02));
-  part(root, new THREE.CylinderGeometry(0.006, 0.006, 0.012, 10).rotateZ(PI / 2), b, V3(0.027, 0.045, 0.06));
-  const slots = [];
-  for (let i = 0; i < 5; i++) { const x = 0.16 + i * 0.052; slots.push(rectPts(x, 0.004, x + 0.03, 0.016), rectPts(x, 0.034, x + 0.03, 0.046)); }
-  part(root, ex([[0.13, -0.012], [0.44, -0.012], [0.445, 0.0], [0.445, 0.068], [0.13, 0.068]], 0.064, 0.004, slots), b);
-  part(root, ex(rectPts(0.14, 0.068, 0.44, 0.076), 0.028, 0.001), b);
-  part(root, ex([[0.3, -0.012], [0.345, -0.012], [0.33, -0.07], [0.305, -0.07]], 0.03, 0.004), t);
-  part(root, tubeAlong(0.0095, 0.44, 0.6, 0.03), b);
-  part(root, tubeAlong(0.016, -0.13, -0.3, 0.035), b);
-  part(root, ex([[-0.37, -0.055], [-0.37, 0.068], [-0.25, 0.062], [-0.2, 0.05], [-0.2, 0.018], [-0.3, -0.012], [-0.33, -0.05]], 0.046, 0.005), t);
-  part(root, ex(rectPts(-0.385, -0.058, -0.37, 0.07), 0.05, 0.003), gunMats.rubber);
-  const handle = part(root, ex([[-0.16, 0.052], [-0.125, 0.052], [-0.125, 0.064], [-0.16, 0.064]], 0.05, 0.002), b);
+  part(root, new THREE.CylinderGeometry(0.0085, 0.0085, 0.032, 16).rotateX(PI / 2 - 0.25), b, V3(0.027, 0.05, 0.085));
+  part(root, new THREE.CylinderGeometry(0.0065, 0.0065, 0.006, 16).rotateX(PI / 2 - 0.25), gunMats.steel, V3(0.029, 0.053, 0.102));
+  part(root, ex([[0.0, 0.03], [0.028, 0.03], [0.028, 0.055], [0.01, 0.055]], 0.008, 0.0008).translate(0.028, 0, 0), b);
+  part(root, new THREE.BoxGeometry(0.0025, 0.02, 0.066), b, V3(0.0268, 0.04, -0.018));
+  part(root, new THREE.BoxGeometry(0.001, 0.003, 0.03), gunMats.steel, V3(0.0282, 0.046, -0.005));
+  addPicatinny(root, -0.13, 0.13, 0.066, 0.022);
+  // levier d'armement en T
+  const handle = new THREE.Group(); root.add(handle);
+  part(handle, new THREE.BoxGeometry(0.012, 0.008, 0.03), b, V3(0, 0.06, 0.14));
+  part(handle, xsec([[-0.024, 0.056], [0.024, 0.056], [0.02, 0.066], [-0.02, 0.066]], -0.162, -0.15, 0.0008), b);
+  // garde-main octogonal flottant avec fentes M-LOK
+  part(root, xsec(octo(0.064, 0.064, 0.016, 0, 0.028), 0.132, 0.445, 0.0015), b);
+  for (let i = 0; i < 5; i++) for (const s of [-1, 1]) { const z = -(0.17 + i * 0.054); part(root, new THREE.BoxGeometry(0.0012, 0.009, 0.03), gunMats.dark, V3(s * 0.0322, 0.028, z)); part(root, new THREE.BoxGeometry(0.03, 0.0012, 0.009), gunMats.dark, V3(0, -0.0042, z).add(V3(0, 0, 0))); }
+  part(root, xsec(octo(0.068, 0.068, 0.017, 0, 0.028), 0.132, 0.14, 0.0008), b);
+  addPicatinny(root, 0.145, 0.44, 0.06, 0.02);
+  // canon profilé, bloc de gaz, cache-flamme
+  part(root, latheX([[0, 0.44], [0.0105, 0.44], [0.0098, 0.5], [0.0092, 0.6], [0, 0.6]], 0.028, 20), gunMats.steel);
+  let muzzle;
+  if (att.muzzle === 'suppressor') muzzle = addSuppressor(root, 0.6, 0.028, 0.021, 0.17);
+  else muzzle = addBirdcage(root, 0.6, 0.028);
+  // tube de crosse, écrou crénelé, crosse réglable
+  part(root, latheX([[0, -0.3], [0.0165, -0.3], [0.0165, -0.14], [0.02, -0.138], [0.02, -0.128], [0, -0.128]], 0.035, 20), b);
+  part(root, ex([[-0.385, -0.058], [-0.385, 0.066], [-0.33, 0.072], [-0.25, 0.066], [-0.205, 0.056], [-0.205, 0.02], [-0.26, 0.004], [-0.3, -0.018], [-0.34, -0.05]], 0.044, 0.005), t);
+  part(root, ex([[-0.29, 0.066], [-0.21, 0.058], [-0.21, 0.072], [-0.29, 0.08]], 0.03, 0.004), t);
+  part(root, ex(rectPts(-0.4, -0.062, -0.385, 0.07), 0.048, 0.003), gunMats.rubber);
+  part(root, new THREE.BoxGeometry(0.012, 0.008, 0.04), b, V3(0, 0.005, 0.26));
+  // chargeur polymère avec nervures
   const mag = new THREE.Group(); root.add(mag);
   part(mag, ex([[0.036, -0.03], [0.098, -0.03], [0.105, -0.09], [0.118, -0.18], [0.125, -0.22], [0.068, -0.23], [0.058, -0.13], [0.045, -0.07]], 0.027, 0.002), t);
-  part(mag, new THREE.BoxGeometry(0.034, 0.012, 0.07), p, P(0.096, -0.232)).rotation.x = 0.25;
-  let muzzle;
-  if (att.muzzle === 'suppressor') muzzle = addSuppressor(root, 0.6, 0.03, 0.021, 0.17);
-  else {
-    part(root, tubeAlong(0.014, 0.6, 0.655, 0.03), b);
-    for (let i = 0; i < 3; i++) part(root, new THREE.BoxGeometry(0.03, 0.004, 0.035), p, V3(0, 0.03 + (i - 1) * 0.009, -0.63));
-    muzzle = P(0.67, 0.03);
-  }
+  for (let i = 0; i < 4; i++) part(mag, ex([[0.061 + i * 0.001, -0.17 - i * 0.012], [0.12 + i * 0.002, -0.17 - i * 0.012], [0.121 + i * 0.002, -0.174 - i * 0.012], [0.062 + i * 0.001, -0.174 - i * 0.012]], 0.029, 0.0005), t);
+  part(mag, ex([[0.062, -0.228], [0.128, -0.22], [0.13, -0.238], [0.06, -0.244]], 0.033, 0.003), gunMats.poly);
+  // sangle attachée à l'avant du garde-main
+  addSling(root, V3(-0.036, 0.0, -0.4), [V3(-0.06, -0.1, -0.34), V3(-0.085, -0.28, -0.12), V3(-0.1, -0.5, 0.15)]);
+  // marquages
+  addMark(root, ['CT-4  CAL 5.56 NATO', 'S/N E7-004471'], V3(-0.0282, -0.006, -0.05), 0.07, 0.018, 34);
+  addMark(root, ['SAFE', 'SEMI  AUTO'], V3(-0.0282, 0.012, 0.02), 0.03, 0.012, 40);
   let sight;
   if (att.optic === 'irons') {
     part(root, ex(rectPts(-0.118, 0.08, -0.082, 0.088), 0.03, 0.001), b);
     part(root, new THREE.TorusGeometry(0.0055, 0.0022, 8, 16), b, V3(0, 0.098, 0.1));
     part(root, new THREE.BoxGeometry(0.003, 0.01, 0.004), b, V3(0, 0.0895, 0.1));
     for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.004, 0.022, 0.006), b, V3(s * 0.011, 0.094, 0.1));
-    part(root, ex(rectPts(0.405, 0.076, 0.43, 0.086), 0.028, 0.001), b);
+    part(root, ex(rectPts(0.405, 0.068, 0.43, 0.084), 0.028, 0.001), b);
     part(root, new THREE.BoxGeometry(0.0028, 0.013, 0.003), b, V3(0, 0.0925, -0.418));
+    part(root, new THREE.BoxGeometry(0.0012, 0.0012, 0.001), gunMats.tritium, V3(0, 0.0985, -0.4165));
     for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.003, 0.018, 0.006), b, V3(s * 0.009, 0.094, -0.418));
     sight = { p: V3(0, 0.098, 0.1), dist: 0.13 };
-  } else { const o = addOptic(root, att.optic, 0.03, 0.08); sight = { p: P(o.x, o.y), dist: 0.22 }; }
-  const laser = addRail(root, att.rail, V3(-0.042, 0.032, -0.39), V3(0.046, 0.03, -0.37));
-  return finalize({ key: 'carbine', root, mag, magGrab: P(0.08, -0.13), handle, handleTravel: 0.06, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.14, -0.19, -0.42),
-    grip: [V3(0.004, -0.075, 0.075), V3(-1.25, 0, -0.08)],
-    poses: { guard: [V3(-0.01, -0.035, -0.33), V3(0.1, 0, 1.2)], mag: [V3(-0.02, -0.14, -0.08), V3(0.9, 0.2, 0.3)], pouch: POUCH, charge: [V3(-0.03, 0.075, 0.12), V3(-0.4, 0, 1.4)] },
+  } else {
+    part(root, ex(rectPts(0.41, 0.068, 0.432, 0.074), 0.02, 0.001), b);
+    const o = addOptic(root, att.optic, 0.03, 0.08); sight = { p: P(o.x, o.y), dist: 0.22 };
+  }
+  const laser = addRail(root, att.rail, V3(-0.044, 0.03, -0.39), V3(0.048, 0.028, -0.37));
+  return finalize({ key: 'carbine', root, mag, magGrab: P(0.08, -0.13), handle, handleTravel: 0.06, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.13, -0.185, -0.43),
+    grip: [V3(0.004, -0.078, 0.078), V3(-1.25, 0, -0.08)],
+    poses: { guard: [V3(-0.012, -0.035, -0.33), V3(0.1, 0, 1.2)], mag: [V3(-0.02, -0.14, -0.08), V3(0.9, 0.2, 0.3)], pouch: POUCH, charge: [V3(-0.03, 0.075, 0.13), V3(-0.4, 0, 1.4)] },
     reload: magReload(1), preview: { dist: 1.45, center: 0.15 } });
 }
+
+// ------------------------------------------------------------
+// Pistolet-mitrailleur MP9 (famille MP5)
+// ------------------------------------------------------------
 function buildSMG(att) {
   const root = new THREE.Group(), b = gunMats.black, p = gunMats.poly;
-  part(root, tubeAlong(0.026, -0.12, 0.2, 0.038), b);
-  part(root, ex(rectPts(-0.12, 0.008, 0.2, 0.036), 0.046, 0.003), b);
-  part(root, ex([[-0.075, 0.01], [0.07, 0.01], [0.07, -0.02], [0.015, -0.03], [0.0, -0.035], [-0.02, -0.125], [-0.06, -0.12], [-0.045, -0.035], [-0.075, -0.02]], 0.036, 0.004), p);
-  part(root, ex([[-0.005, -0.02], [0.04, -0.02], [0.045, -0.05], [0.0, -0.05]], 0.016, 0.001, [[[0.004, -0.026], [0.036, -0.026], [0.038, -0.044], [0.006, -0.044]]]), p);
-  part(root, ex(rectPts(0.07, -0.022, 0.112, 0.01), 0.034, 0.002), b);
-  part(root, ex([[0.2, -0.008], [0.33, -0.004], [0.34, 0.012], [0.34, 0.058], [0.2, 0.062]], 0.052, 0.004), p);
-  for (let i = 0; i < 5; i++) part(root, new THREE.BoxGeometry(0.056, 0.006, 0.008), gunMats.rubber, V3(0, -0.009, -(0.22 + i * 0.024)));
-  part(root, tubeAlong(0.0085, 0.34, 0.405, 0.038), b);
-  part(root, tubeAlong(0.011, 0.2, 0.33, 0.072), b);
+  // boîtier embouti : profil arrondi avec nervures latérales
+  part(root, xsec([[-0.024, 0.012], [0.024, 0.012], [0.025, 0.036], [0.02, 0.056], [0.01, 0.063], [-0.01, 0.063], [-0.02, 0.056], [-0.025, 0.036]], -0.125, 0.205, 0.0015), b);
+  for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.003, 0.005, 0.32), b, V3(s * 0.0272, 0.046, -0.04));
+  part(root, new THREE.BoxGeometry(0.003, 0.012, 0.05), gunMats.dark, V3(0.0272, 0.038, -0.03));
+  // carcasse et poignée polymère
+  part(root, ex([[-0.078, 0.013], [0.072, 0.013], [0.072, -0.018], [0.02, -0.028], [0.004, -0.034], [-0.016, -0.126], [-0.036, -0.132], [-0.062, -0.124], [-0.05, -0.036], [-0.078, -0.022]], 0.038, 0.004), p);
+  part(root, ex([[-0.005, -0.02], [0.042, -0.02], [0.046, -0.052], [0.0, -0.052]], 0.016, 0.001, [[[0.004, -0.026], [0.036, -0.026], [0.038, -0.046], [0.006, -0.046]]]), p);
+  part(root, ex([[0.014, -0.022], [0.02, -0.022], [0.022, -0.04], [0.016, -0.042]], 0.005, 0.0008), gunMats.steel);
+  const sel = part(root, new THREE.BoxGeometry(0.004, 0.005, 0.024), b, V3(-0.0238, -0.006, 0.05)); sel.rotation.x = 0.35;
+  addMark(root, ['S  1  F'], V3(-0.0235, 0.0, 0.035), 0.03, 0.01, 44);
+  // puits et palette de retenue
+  part(root, ex(rectPts(0.072, -0.024, 0.114, 0.012), 0.034, 0.002), b);
+  part(root, ex([[0.06, -0.024], [0.072, -0.024], [0.07, -0.034], [0.06, -0.032]], 0.03, 0.0008), b);
+  // garde-main tropical rainuré
+  part(root, xsec(rrect(0.05, 0.05, 0.016, 0, 0.034, 4), 0.205, 0.335, 0.0015), p);
+  for (let i = 0; i < 6; i++) for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.0012, 0.03, 0.006), gunMats.dark, V3(s * 0.0268, 0.034, -(0.215 + i * 0.019)));
+  // canon, tube d'armement, levier replié, guidon sous tunnel
+  part(root, latheX([[0, 0.33], [0.0095, 0.33], [0.009, 0.4], [0.011, 0.4], [0.011, 0.415], [0, 0.415]], 0.036, 18), gunMats.steel);
+  part(root, latheX([[0, 0.205], [0.011, 0.205], [0.011, 0.33], [0.0095, 0.335], [0, 0.335]], 0.072, 18), b);
   const handle = new THREE.Group(); root.add(handle);
-  const hb = part(handle, new THREE.BoxGeometry(0.034, 0.008, 0.012), b, V3(-0.026, 0.072, -0.3)); hb.rotation.y = -0.4;
-  part(root, new THREE.TorusGeometry(0.0065, 0.0028, 8, 16), b, P(-0.1, 0.079));
-  for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.004, 0.024, 0.012), b, V3(s * 0.012, 0.074, 0.1));
-  part(root, ex(rectPts(-0.112, 0.06, -0.088, 0.07), 0.02, 0.001), b);
-  part(root, new THREE.TorusGeometry(0.013, 0.003, 8, 18), b, P(0.33, 0.082));
+  const hb = part(handle, new THREE.BoxGeometry(0.03, 0.007, 0.011), b, V3(-0.026, 0.074, -0.3)); hb.rotation.y = -0.45;
+  part(handle, new THREE.SphereGeometry(0.006, 10, 8), b, V3(-0.038, 0.074, -0.307));
+  const hood = [[-0.013, 0.062], [0.013, 0.062], [0.013, 0.082], [0.009, 0.093], [-0.009, 0.093], [-0.013, 0.082]];
+  part(root, xsec(hood, 0.318, 0.34, 0.0005, [circ(0.0095, 0, 0.079, 16).reverse()]), b);
   part(root, new THREE.BoxGeometry(0.0028, 0.012, 0.003), b, P(0.33, 0.075));
-  part(root, ex(rectPts(0.315, 0.062, 0.345, 0.07), 0.02, 0.001), b);
-  if (att.optic !== 'irons') part(root, ex(rectPts(-0.07, 0.064, 0.09, 0.076), 0.03, 0.001), b);
-  for (const s of [-1, 1]) part(root, tubeAlong(0.005, -0.31, -0.12, 0.03).translate(s * 0.02, 0, 0), b);
-  part(root, ex(rectPts(-0.335, -0.045, -0.31, 0.065), 0.05, 0.004), gunMats.rubber);
+  // diopatre arrière : anneau + tambour
+  part(root, new THREE.TorusGeometry(0.0062, 0.0026, 8, 16), b, P(-0.1, 0.079));
+  for (const s of [-1, 1]) part(root, new THREE.CylinderGeometry(0.012, 0.012, 0.004, 16).rotateZ(PI / 2), b, V3(s * 0.011, 0.074, 0.1));
+  part(root, ex(rectPts(-0.112, 0.062, -0.088, 0.07), 0.02, 0.001), b);
+  if (att.optic !== 'irons') { part(root, ex(rectPts(-0.07, 0.063, 0.09, 0.068), 0.03, 0.001), b); addPicatinny(root, -0.07, 0.09, 0.068, 0.022); }
+  // crosse rétractable
+  for (const s of [-1, 1]) part(root, tubeAlong(0.0052, -0.31, -0.12, 0.03).translate(s * 0.02, 0, 0), gunMats.steel);
+  part(root, ex([[-0.34, -0.05], [-0.31, -0.05], [-0.305, 0.07], [-0.34, 0.07]], 0.052, 0.005), p);
+  part(root, ex(rectPts(-0.348, -0.048, -0.338, 0.068), 0.05, 0.003), gunMats.rubber);
+  part(root, new THREE.BoxGeometry(0.01, 0.012, 0.02), b, V3(0, 0.012, 0.13));
+  // chargeur courbe nervuré
   const mag = new THREE.Group(); root.add(mag);
   part(mag, ex([[0.074, -0.02], [0.108, -0.02], [0.118, -0.1], [0.14, -0.2], [0.112, -0.21], [0.088, -0.11]], 0.024, 0.002), b);
+  for (const s of [-1, 1]) part(mag, ex([[0.086, -0.04], [0.092, -0.04], [0.108, -0.18], [0.102, -0.18]], 0.002, 0.0003).translate(s * 0.0125, 0, 0), b);
+  part(mag, ex([[0.108, -0.2], [0.144, -0.198], [0.146, -0.212], [0.11, -0.214]], 0.028, 0.002), b);
+  addSling(root, V3(-0.03, 0.04, -0.2), [V3(-0.06, -0.06, -0.15), V3(-0.08, -0.25, 0.0), V3(-0.1, -0.5, 0.2)]);
+  addMark(root, ['MP9  9mm x19'], V3(-0.0275, 0.03, -0.1), 0.05, 0.01, 44);
   let muzzle;
-  if (att.muzzle === 'suppressor') muzzle = addSuppressor(root, 0.405, 0.038, 0.019, 0.15);
-  else { part(root, tubeAlong(0.011, 0.395, 0.415, 0.038), b); muzzle = P(0.42, 0.038); }
+  if (att.muzzle === 'suppressor') muzzle = addSuppressor(root, 0.415, 0.036, 0.019, 0.15);
+  else muzzle = P(0.42, 0.036);
   let sight;
   if (att.optic === 'irons') sight = { p: P(-0.1, 0.079), dist: 0.12 };
-  else { const o = addOptic(root, att.optic, 0.01, 0.076); sight = { p: P(o.x, o.y), dist: 0.22 }; }
-  const laser = addRail(root, att.rail, V3(-0.042, 0.03, -0.29), V3(0.044, 0.03, -0.29));
-  return finalize({ key: 'smg', root, mag, magGrab: P(0.1, -0.1), handle, handleTravel: 0.05, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.13, -0.17, -0.38),
-    grip: [V3(0.004, -0.066, 0.045), V3(-1.25, 0, -0.08)],
-    poses: { guard: [V3(-0.01, -0.03, -0.27), V3(0.1, 0, 1.2)], mag: [V3(-0.02, -0.12, -0.1), V3(0.9, 0.2, 0.3)], pouch: POUCH, charge: [V3(-0.045, 0.072, -0.3), V3(-0.4, 0, 1.4)] },
+  else { const o = addOptic(root, att.optic, 0.01, 0.078); sight = { p: P(o.x, o.y), dist: 0.22 }; }
+  const laser = addRail(root, att.rail, V3(-0.044, 0.03, -0.29), V3(0.046, 0.03, -0.29));
+  return finalize({ key: 'smg', root, mag, magGrab: P(0.1, -0.1), handle, handleTravel: 0.05, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.12, -0.17, -0.39),
+    grip: [V3(0.004, -0.068, 0.045), V3(-1.25, 0, -0.08)],
+    poses: { guard: [V3(-0.012, -0.03, -0.27), V3(0.1, 0, 1.2)], mag: [V3(-0.02, -0.12, -0.1), V3(0.9, 0.2, 0.3)], pouch: POUCH, charge: [V3(-0.045, 0.074, -0.3), V3(-0.4, 0, 1.4)] },
     reload: magReload(1.05), preview: { dist: 1.2, center: 0.05 } });
 }
+
+// ------------------------------------------------------------
+// Fusil à pompe SG-12 (famille 870)
+// ------------------------------------------------------------
 function buildShotgun(att) {
   const root = new THREE.Group(), b = gunMats.black, p = gunMats.poly;
-  part(root, ex([[-0.1, -0.012], [0.13, -0.012], [0.13, 0.062], [-0.1, 0.062], [-0.105, 0.05]], 0.05, 0.003), b);
-  part(root, new THREE.BoxGeometry(0.03, 0.004, 0.09), gunMats.rubber, V3(0, -0.0145, -0.05));
-  part(root, ex([[-0.06, -0.012], [0.0, -0.012], [0.004, -0.05], [-0.056, -0.046]], 0.016, 0.001, [[[-0.052, -0.018], [-0.004, -0.018], [-0.002, -0.044], [-0.05, -0.041]]]), b);
+  // boîte de culasse à dos arrondi
+  part(root, xsec([[-0.025, -0.012], [0.025, -0.012], [0.025, 0.046], [0.02, 0.058], [0.008, 0.063], [-0.008, 0.063], [-0.02, 0.058], [-0.025, 0.046]], -0.1, 0.13, 0.0015), b);
+  part(root, new THREE.BoxGeometry(0.0015, 0.024, 0.07), gunMats.dark, V3(0.0268, 0.03, -0.05));
+  part(root, new THREE.BoxGeometry(0.0012, 0.018, 0.066), gunMats.steel, V3(0.0266, 0.03, -0.05));
+  part(root, new THREE.BoxGeometry(0.03, 0.002, 0.09), gunMats.dark, V3(0, -0.013, -0.05));
+  part(root, new THREE.BoxGeometry(0.018, 0.004, 0.08), gunMats.steel, V3(0, -0.012, -0.05));
+  // pontet, détente, sûreté
+  part(root, ex([[-0.062, -0.012], [0.002, -0.012], [0.006, -0.05], [-0.058, -0.047]], 0.016, 0.001, [[[-0.054, -0.018], [-0.004, -0.018], [-0.002, -0.044], [-0.052, -0.041]]]), b);
+  part(root, ex([[-0.034, -0.014], [-0.028, -0.014], [-0.026, -0.036], [-0.032, -0.038]], 0.005, 0.0008), gunMats.steel);
+  part(root, new THREE.CylinderGeometry(0.004, 0.004, 0.056, 12).rotateZ(PI / 2), gunMats.shellRed, V3(0, -0.006, 0.052));
+  // crosse pistolet quadrillée + plaque de couche
   part(root, ex([[-0.1, 0.062], [-0.1, -0.012], [-0.118, -0.03], [-0.098, -0.13], [-0.138, -0.132], [-0.158, -0.042], [-0.46, -0.082], [-0.47, -0.064], [-0.47, 0.058], [-0.32, 0.05], [-0.14, 0.058]], 0.042, 0.005), p);
-  part(root, ex(rectPts(-0.49, -0.086, -0.47, 0.064), 0.046, 0.004), gunMats.rubber);
-  part(root, tubeAlong(0.0115, 0.13, 0.64, 0.048), b);
-  part(root, tubeAlong(0.0135, 0.13, 0.56, 0.014), b);
-  part(root, tubeAlong(0.0155, 0.56, 0.58, 0.014), gunMats.steel);
-  part(root, ex(rectPts(0.54, 0.0, 0.565, 0.062), 0.034, 0.002), b);
-  part(root, new THREE.SphereGeometry(0.004, 8, 6), gunMats.steel, P(0.628, 0.063));
-  part(root, ex(rectPts(-0.08, 0.062, 0.1, 0.07), 0.028, 0.001), b);
-  part(root, new THREE.BoxGeometry(0.006, 0.05, 0.13), p, V3(-0.028, 0.025, -0.01));
-  for (let i = 0; i < 5; i++) {
-    const z = 0.04 - i * 0.026;
-    part(root, new THREE.CylinderGeometry(0.0105, 0.0105, 0.05, 12), gunMats.shellRed, V3(-0.039, 0.031, z));
-    part(root, new THREE.CylinderGeometry(0.011, 0.011, 0.012, 12), brassMat, V3(-0.039, 0.003, z));
+  part(root, ex(rectPts(-0.495, -0.088, -0.47, 0.066), 0.047, 0.005), gunMats.rubber);
+  for (let i = 0; i < 6; i++) part(root, new THREE.BoxGeometry(0.049, 0.002, 0.004), gunMats.dark, V3(0, -0.072 + i * 0.025, 0.483));
+  part(root, new THREE.CylinderGeometry(0.006, 0.006, 0.006, 12).rotateZ(PI / 2), gunMats.steel, V3(-0.022, -0.06, 0.4));
+  // canon, tube magasin, bouchon, collier
+  part(root, latheX([[0, 0.13], [0.0125, 0.13], [0.0118, 0.2], [0.0112, 0.64], [0, 0.64]], 0.048, 22), b);
+  part(root, latheX([[0, 0.13], [0.0135, 0.13], [0.0135, 0.555], [0, 0.555]], 0.014, 22), b);
+  part(root, latheX([[0, 0.555], [0.0158, 0.555], [0.0158, 0.585], [0.013, 0.592], [0, 0.592]], 0.014, 22), gunMats.steel);
+  part(root, new THREE.TorusGeometry(0.008, 0.0018, 6, 14), gunMats.steel, V3(0, -0.006, -0.575)).rotation.y = PI / 2;
+  part(root, xsec([[-0.017, 0.0], [0.017, 0.0], [0.017, 0.062], [-0.017, 0.062]], 0.535, 0.56, 0.001, [circ(0.0118, 0, 0.048, 16).reverse(), circ(0.0138, 0, 0.014, 16).reverse()]), b);
+  part(root, new THREE.SphereGeometry(0.0038, 10, 8), gunMats.bright, P(0.628, 0.0625));
+  addPicatinny(root, -0.08, 0.1, 0.063, 0.024);
+  // porte-cartouches latéral
+  part(root, new THREE.BoxGeometry(0.006, 0.05, 0.14), p, V3(-0.029, 0.026, -0.012));
+  for (let i = 0; i < 6; i++) {
+    const z = 0.046 - i * 0.023;
+    part(root, new THREE.CylinderGeometry(0.0105, 0.0105, 0.046, 14), gunMats.shellRed, V3(-0.04, 0.033, z));
+    part(root, new THREE.CylinderGeometry(0.011, 0.011, 0.014, 14), brassMat, V3(-0.04, 0.004, z));
+    part(root, new THREE.CylinderGeometry(0.0095, 0.0095, 0.002, 12), gunMats.dark, V3(-0.04, 0.0565, z));
   }
+  // pompe rainurée
   const pump = new THREE.Group(); root.add(pump);
-  part(pump, ex(rectPts(0.2, -0.018, 0.39, 0.034), 0.058, 0.005), p);
-  for (let i = 0; i < 7; i++) for (const s of [-1, 1]) part(pump, new THREE.BoxGeometry(0.004, 0.036, 0.008), gunMats.rubber, V3(s * 0.031, 0.008, -(0.215 + i * 0.025)));
+  part(pump, xsec(rrect(0.058, 0.052, 0.018, 0, 0.012, 4), 0.2, 0.39, 0.002, [circ(0.0142, 0, 0.014, 16).reverse()]), p);
+  for (let i = 0; i < 8; i++) for (const s of [-1, 1]) part(pump, new THREE.BoxGeometry(0.0015, 0.034, 0.005), gunMats.dark, V3(s * 0.0292, 0.012, -(0.22 + i * 0.02)));
+  addMark(root, ['SG-12  12 GA 3in'], V3(-0.0272, 0.04, -0.05), 0.06, 0.012, 40);
+  addSling(root, V3(-0.018, -0.006, -0.575), [V3(-0.05, -0.1, -0.5), V3(-0.08, -0.3, -0.2), V3(-0.1, -0.5, 0.1)]);
   const muzzle = P(0.65, 0.048);
   let sight;
   if (att.optic === 'irons') {
-    part(root, ex(rectPts(-0.075, 0.07, -0.045, 0.078), 0.028, 0.001), b);
+    part(root, ex(rectPts(-0.075, 0.069, -0.045, 0.078), 0.028, 0.001), b);
     part(root, new THREE.TorusGeometry(0.006, 0.0024, 8, 16), b, V3(0, 0.087, 0.06));
     for (const s of [-1, 1]) part(root, new THREE.BoxGeometry(0.004, 0.02, 0.008), b, V3(s * 0.012, 0.083, 0.06));
     part(root, ex(rectPts(0.6, 0.058, 0.625, 0.066), 0.012, 0.001), b);
     part(root, new THREE.BoxGeometry(0.003, 0.022, 0.004), gunMats.steel, V3(0, 0.077, -0.615));
+    part(root, new THREE.BoxGeometry(0.0014, 0.0014, 0.001), gunMats.tritium, V3(0, 0.0865, -0.6128));
     sight = { p: V3(0, 0.087, 0.06), dist: 0.14 };
-  } else { const o = addOptic(root, att.optic, 0.01, 0.07); sight = { p: P(o.x, o.y), dist: 0.22 }; }
-  const laser = addRail(root, att.rail, V3(-0.04, 0.03, -0.54), V3(0.044, 0.03, -0.54));
-  return finalize({ key: 'shotgun', root, mag: null, pump, pumpTravel: 0.075, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.14, -0.19, -0.44),
-    grip: [V3(0.004, -0.076, 0.122), V3(-1.25, 0, -0.08)],
-    poses: { guard: [V3(-0.008, -0.04, -0.3), V3(0.1, 0, 1.2)], port: [V3(0.0, -0.085, -0.04), V3(1.1, 0, 0.4)], pouch: POUCH, mag: [V3(0.0, -0.085, -0.04), V3(1.1, 0, 0.4)], charge: [V3(-0.008, -0.04, -0.3), V3(0.1, 0, 1.2)] },
+  } else { const o = addOptic(root, att.optic, 0.01, 0.069); sight = { p: P(o.x, o.y), dist: 0.22 }; }
+  const laser = addRail(root, att.rail, V3(-0.04, 0.03, -0.54), V3(0.046, 0.03, -0.54));
+  return finalize({ key: 'shotgun', root, mag: null, pump, pumpTravel: 0.075, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.13, -0.19, -0.44),
+    grip: [V3(0.004, -0.078, 0.124), V3(-1.25, 0, -0.08)],
+    poses: { guard: [V3(-0.01, -0.04, -0.3), V3(0.1, 0, 1.2)], port: [V3(0.0, -0.085, -0.04), V3(1.1, 0, 0.4)], pouch: POUCH, mag: [V3(0.0, -0.085, -0.04), V3(1.1, 0, 0.4)], charge: [V3(-0.01, -0.04, -0.3), V3(0.1, 0, 1.2)] },
     preview: { dist: 1.55, center: 0.12 } });
 }
+
+// ------------------------------------------------------------
+// Pistolet P17 (pistolet à carcasse polymère)
+// ------------------------------------------------------------
 function buildPistol(att) {
   const root = new THREE.Group(), b = gunMats.black, p = gunMats.poly;
+  // culasse : section chanfreinée, stries avant et arrière, fenêtre d'éjection
   const slide = new THREE.Group(); root.add(slide);
-  part(slide, ex([[-0.055, 0.034], [0.13, 0.034], [0.133, 0.04], [0.133, 0.062], [-0.05, 0.064], [-0.056, 0.058]], 0.025, 0.002), b);
-  for (let i = 0; i < 6; i++) part(slide, new THREE.BoxGeometry(0.0265, 0.02, 0.0022), p, P(-0.046 + i * 0.005, 0.049));
-  part(slide, new THREE.BoxGeometry(0.014, 0.004, 0.04), gunMats.steel, P(0.02, 0.0635));
-  part(root, tubeAlong(0.0055, 0.125, 0.1345, 0.049), gunMats.steel);
+  const sec = [[-0.0125, 0.034], [0.0125, 0.034], [0.0125, 0.056], [0.009, 0.0635], [-0.009, 0.0635], [-0.0125, 0.056]];
+  part(slide, xsec(sec, -0.056, 0.126, 0.0008), b);
+  part(slide, xsec([[-0.0125, 0.034], [0.0125, 0.034], [0.0125, 0.052], [0.006, 0.058], [-0.006, 0.058], [-0.0125, 0.052]], 0.126, 0.134, 0.0008), b);
+  for (let i = 0; i < 7; i++) for (const s of [-1, 1]) {
+    part(slide, new THREE.BoxGeometry(0.0012, 0.018, 0.0018), gunMats.dark, V3(s * 0.0136, 0.046, 0.05 - i * 0.004));
+    if (i < 5) part(slide, new THREE.BoxGeometry(0.0012, 0.014, 0.0018), gunMats.dark, V3(s * 0.0136, 0.048, -0.112 + i * 0.004));
+  }
+  part(slide, new THREE.BoxGeometry(0.02, 0.0015, 0.036), gunMats.dark, V3(0.002, 0.0638, -0.02));
+  part(slide, new THREE.BoxGeometry(0.015, 0.003, 0.034), gunMats.bright, V3(0.001, 0.062, -0.02));
+  part(slide, new THREE.BoxGeometry(0.0022, 0.004, 0.014), gunMats.steel, V3(0.0138, 0.056, -0.005));
+  addMark(slide, ['P17  9x19'], V3(-0.0139, 0.046, -0.04), 0.045, 0.009, 50);
+  // canon visible
+  part(root, latheX([[0, 0.12], [0.0062, 0.12], [0.0062, 0.1348], [0.0036, 0.1348], [0.0036, 0.132], [0, 0.132]], 0.049, 16), gunMats.bright);
+  // carcasse, rail, poignée avec texture, pontet, détente à sûreté
   part(root, ex(rectPts(-0.05, 0.02, 0.13, 0.034), 0.024, 0.002), p);
   part(root, ex([[0.04, 0.02], [0.13, 0.02], [0.13, 0.006], [0.05, 0.006]], 0.024, 0.002), p);
-  part(root, ex([[-0.056, 0.022], [0.004, 0.022], [0.0, 0.002], [-0.02, -0.084], [-0.066, -0.08], [-0.062, -0.02]], 0.03, 0.004), p);
+  for (let i = 0; i < 3; i++) part(root, new THREE.BoxGeometry(0.025, 0.004, 0.004), gunMats.dark, V3(0, 0.006, -(0.07 + i * 0.015)));
+  part(root, ex([[-0.056, 0.022], [0.006, 0.022], [0.002, 0.002], [-0.004, -0.02], [-0.012, -0.03], [-0.016, -0.05], [-0.022, -0.086], [-0.066, -0.082], [-0.062, -0.03], [-0.064, 0.008], [-0.062, 0.02]], 0.03, 0.004), p);
   part(root, ex([[0.0, 0.012], [0.046, 0.012], [0.05, -0.012], [0.044, -0.022], [0.004, -0.022]], 0.02, 0.001, [[[0.008, 0.006], [0.038, 0.006], [0.04, -0.012], [0.01, -0.014]]]), p);
-  part(root, new THREE.BoxGeometry(0.004, 0.018, 0.008), b, P(0.022, -0.002));
+  part(root, ex([[0.018, 0.004], [0.024, 0.004], [0.026, -0.014], [0.02, -0.016]], 0.006, 0.0006), p);
+  part(root, new THREE.BoxGeometry(0.0015, 0.008, 0.002), gunMats.dark, P(0.022, -0.004));
+  part(root, new THREE.BoxGeometry(0.004, 0.004, 0.014), b, V3(-0.0148, 0.03, -0.02));
+  part(root, new THREE.BoxGeometry(0.003, 0.006, 0.006), b, V3(-0.0146, 0.028, -0.055));
+  part(root, new THREE.BoxGeometry(0.005, 0.008, 0.008), p, V3(-0.0156, 0.004, -0.004));
+  // chargeur (semelle visible)
   const mag = new THREE.Group(); root.add(mag);
   part(mag, ex([[-0.058, 0.018], [-0.026, 0.018], [-0.024, -0.082], [-0.06, -0.08]], 0.022, 0.001), b);
-  part(mag, ex([[-0.068, -0.08], [-0.018, -0.084], [-0.018, -0.094], [-0.068, -0.09]], 0.031, 0.002), b);
-  part(slide, new THREE.BoxGeometry(0.004, 0.007, 0.006), b, P(0.118, 0.0655));
-  part(slide, new THREE.SphereGeometry(0.0013, 6, 4), gunMats.white, P(0.1155, 0.0665));
-  for (const s of [-1, 1]) { part(slide, new THREE.BoxGeometry(0.008, 0.007, 0.008), b, V3(s * 0.0075, 0.0665, 0.045)); part(slide, new THREE.SphereGeometry(0.0013, 6, 4), gunMats.white, V3(s * 0.0075, 0.0675, 0.0405)); }
+  part(mag, ex([[-0.07, -0.08], [-0.018, -0.084], [-0.017, -0.094], [-0.07, -0.09]], 0.031, 0.002), p);
+  // organes de visée tritium
+  part(slide, new THREE.BoxGeometry(0.004, 0.007, 0.006), b, P(0.118, 0.0665));
+  part(slide, new THREE.SphereGeometry(0.0013, 8, 6), gunMats.tritium, P(0.1152, 0.0675));
+  for (const s of [-1, 1]) { part(slide, new THREE.BoxGeometry(0.008, 0.007, 0.008), b, V3(s * 0.0075, 0.0665, 0.045)); part(slide, new THREE.SphereGeometry(0.0013, 8, 6), gunMats.tritium, V3(s * 0.0075, 0.0675, 0.0405)); }
   let sight;
-  if (att.optic === 'reddot') { const o = addRMR(slide, -0.012, 0.064); sight = { p: P(o.x, o.y), dist: 0.34 }; }
+  if (att.optic === 'reddot') { const o = addRMR(slide, -0.012, 0.0635); sight = { p: P(o.x, o.y), dist: 0.34 }; }
   else sight = { p: V3(0, 0.069, 0.045), dist: 0.33 };
   let muzzle;
-  if (att.muzzle === 'suppressor') muzzle = addSuppressor(root, 0.134, 0.049, 0.016, 0.15);
+  if (att.muzzle === 'suppressor') muzzle = addSuppressor(root, 0.1348, 0.049, 0.016, 0.15);
   else muzzle = P(0.138, 0.049);
-  part(root, ex(rectPts(0.052, -0.012, 0.124, 0.006), 0.03, 0.003), b);
-  const lens = part(root, new THREE.CircleGeometry(0.011, 14), gunMats.lens, V3(0, -0.003, -0.1275)); lens.rotation.y = PI;
+  // lampe sous le rail
+  part(root, xsec(rrect(0.03, 0.02, 0.005, 0, -0.003, 3), 0.052, 0.122, 0.001), b);
+  part(root, latheX([[0, 0.118], [0.0125, 0.118], [0.0135, 0.126], [0, 0.126]], -0.003, 20), b);
+  const lens = part(root, new THREE.CircleGeometry(0.0105, 16), gunMats.lens, V3(0, -0.003, -0.1265)); lens.rotation.y = PI;
+  part(root, new THREE.BoxGeometry(0.008, 0.008, 0.012), gunMats.rubber, V3(0.016, -0.004, -0.06));
+  part(root, new THREE.BoxGeometry(0.008, 0.008, 0.012), gunMats.rubber, V3(-0.016, -0.004, -0.06));
   let laser = null;
   if (att.rail === 'laser') { part(root, cylZ(0.003, 0.003, 0.004), gunMats.laserRed, V3(0.009, -0.009, -0.127)); laser = V3(0.009, -0.009, -0.13); }
-  return finalize({ key: 'pistol', root, mag, magGrab: P(-0.04, -0.05), slide, slideTravel: 0.028, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.09, -0.16, -0.4),
+  return finalize({ key: 'pistol', root, mag, magGrab: P(-0.04, -0.05), slide, slideTravel: 0.028, muzzle, laser, sight: sight.p, adsDist: sight.dist, hip: V3(0.075, -0.135, -0.39),
     grip: [V3(0.004, -0.03, 0.042), V3(-1.2, 0, -0.05)],
     poses: { guard: [V3(-0.03, -0.05, 0.03), V3(0.3, 0.25, 1.35)], mag: [V3(-0.015, -0.1, 0.045), V3(0.9, 0.2, 0.3)], pouch: POUCH, charge: [V3(0.0, 0.08, 0.06), V3(-0.7, 0, 1.2)] },
     reload: pistolReload(), preview: { dist: 0.62, center: 0.0 } });
@@ -1402,12 +1585,13 @@ rightHand.traverse(m => { if (m.isMesh) m.frustumCulled = false; });
 
 const muzzleSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(flashC), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, color: new THREE.Color(3, 2.4, 1.6) }));
 muzzleSprite.visible = false; gunBody.add(muzzleSprite);
-const vmHemi = new THREE.HemisphereLight(0xc2ccd8, 0x1b1a18, 0.4);
+const vmHemi = new THREE.HemisphereLight(0xc2ccd8, 0x1b1a18, 0.5);
+const vmRim = new THREE.DirectionalLight(0xbcd0ff, 0.9); vmRim.position.set(-0.6, 0.4, -1);
 const vmKey = new THREE.DirectionalLight(0xdfe6ee, 1.8); vmKey.position.set(-0.4, 1, 0.25);
 const vmFill = new THREE.DirectionalLight(0xffe2c0, 0.4); vmFill.position.set(0.6, -0.2, -0.5);
 const vmFlash = new THREE.PointLight(0xffb060, 0, 2, 2);
-const vmLamp = new THREE.PointLight(0xfff2d8, 0, 0.6, 2); vmLamp.position.set(-0.04, 0.05, -0.55);
-gunScene.add(vmHemi, vmKey, vmFill, vmFlash, vmLamp);
+const vmLamp = new THREE.PointLight(0xfff2d8, 0, 2.2, 2); vmLamp.position.set(0.0, 0.12, -1.35);
+gunScene.add(vmHemi, vmKey, vmFill, vmFlash, vmLamp, vmRim);
 
 const viewCache = new Map();
 let W = null;
@@ -1420,6 +1604,7 @@ function equipView(key) {
   if (W) weaponHolder.remove(W.root);
   W = viewFor(key);
   weaponHolder.add(W.root);
+  (W.root.userData.slings || []).forEach(m => { m.visible = true; });
   rightHand.position.copy(W.grip[0]); rightHand.rotation.setFromVector3(W.grip[1]);
   rightSleeve.position.copy(W.grip[0]).add(V3(-0.004, -0.03, 0.03));
   if (W.mag) { W.mag.position.set(0, 0, 0); W.mag.visible = true; }
@@ -3006,7 +3191,7 @@ function updateGun(dt, t) {
   const qL = new THREE.Quaternion().setFromUnitVectors(V3(0, 0, 1), (pis ? V3(-0.45, -0.6, 0.7) : V3(-0.35, -0.75, 0.55)).normalize());
   leftSleeve.quaternion.copy(qArm.invert().multiply(qL));
   vmCam.fov = lerp(50, 38, adsT); vmCam.updateProjectionMatrix();
-  vmKey.intensity = 1.8;
+  vmKey.intensity = 1.8; vmRim.intensity = 0.9;
 }
 function updateLaser() {
   const on = state === 'play' && W && W.laser && lampOn && !switchState && player.alive;
@@ -3042,10 +3227,10 @@ function updateWorld(dt, t) {
   lamp.intensity = lampOn ? 28 : 0;
   gunMats.lens.emissiveIntensity = lampOn ? 3 : 0;
   gunMats.laserRed.color.setRGB(lampOn ? 8 : 0.3, lampOn ? 0.4 : 0.02, lampOn ? 0.3 : 0.02);
-  vmLamp.intensity = lampOn ? 0.25 : 0;
+  vmLamp.intensity = lampOn ? 1.1 : 0;
   let env = 0;
   for (const fx of fixtures) if (fx.light.intensity > 0) { const d = fx.light.position.distanceTo(camera.position); env += fx.light.intensity / (d * d + 2); }
-  vmHemi.intensity = 0.3 + clamp(env * 0.1, 0, 1.0);
+  vmHemi.intensity = 0.42 + clamp(env * 0.1, 0, 1.0);
   flashT -= dt;
   const flashOn = flashT > 0;
   muzzleSprite.visible = flashOn;
@@ -3195,13 +3380,15 @@ function arsenalPreview(t) {
   gunRoot.visible = true; setHandsVisible(false); muzzleSprite.visible = false;
   const pv = W.preview, d = pv.dist;
   const narrow = innerWidth < 700;
-  gunRoot.position.set(narrow ? 0 : d * 0.36, narrow ? d * 0.22 : -0.02, -d);
-  gunRoot.rotation.set(0.12, -PI / 2 + Math.sin(t * 0.35) * 0.32, 0);
+  const D = d * 1.45;
+  gunRoot.position.set(narrow ? 0 : D * 0.15, narrow ? D * 0.14 : -0.01, -D);
+  (W.root.userData.slings || []).forEach(m => { m.visible = false; });
+  gunRoot.rotation.set(0.08, PI / 2 + Math.sin(t * 0.35) * 0.3, 0);
   gunBody.position.set(0, 0, 0); gunBody.rotation.set(0, 0, 0);
   weaponHolder.position.set(0, 0, pv.center);
   if (W.mag) { W.mag.position.set(0, 0, 0); W.mag.visible = true; }
-  vmCam.fov = 50; vmCam.updateProjectionMatrix();
-  vmHemi.intensity = 0.95; vmKey.intensity = 2.6; vmLamp.intensity = 0;
+  vmCam.fov = 34; vmCam.updateProjectionMatrix();
+  vmHemi.intensity = 0.55; vmKey.intensity = 1.5; vmLamp.intensity = 0; vmRim.intensity = 0.7;
 }
 // --- Personnage ---
 function syncPersoUI() {
@@ -3376,10 +3563,10 @@ function loop(nowMs) {
     updateOfficer(dt, t);
     updateStamp(dt);
   }
-  if (uiScreen === 'arsenal') arsenalPreview(t);
   updateLegs(dt);
   updateLaser();
   if (state !== 'pause') updateWorld(dt, t);
+  if (uiScreen === 'arsenal') arsenalPreview(t);
   updateFps(dt);
   setListener();
   bodycam.uniforms.uTime.value = t;
