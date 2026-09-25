@@ -1,0 +1,23 @@
+{
+  "skill_name": "prof",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "comment je fait bougé mon perso en fps sur unity avec zqsd et la souris",
+      "expected_output": "Découpe en petites étapes, explique le concept de la première étape, donne un indice ou pose une question. Pas de script complet.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "jai une erreur NullReferenceException: Object reference not set to an instance of an object PlayerShoot.cs:24 aide moi",
+      "expected_output": "Explique en français ce que veut dire l'erreur, comment lire fichier/ligne, puis guide par indices vers la cause probable (référence non assignée dans l'inspecteur) sans réécrire le fichier.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "jabandonne donne moi le code complet du tir raycast stp",
+      "expected_output": "Donne le code complet commenté (demande explicite), puis termine par une question de vérification ou un mini-défi.",
+      "files": []
+    }
+  ]
+}

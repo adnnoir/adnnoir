@@ -1,3 +1,5 @@
+<!doctype html>
+<meta charset="utf-8">
 <title>Entrepôt 7</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2427,7 +2429,32 @@ function updateDroppedMags(dt) {
 // ============================================================
 // Audio : bus séparés (effets, ambiance, musique), sons 3D, micro saturé
 // ============================================================
-let AC = null, master, sfxBus, ambBus, musicBus, uiBus, muffle, shaper, clipCurve, noiseBuf, humGain, music = null;
+let AC = null, master, sfxBus, ambBus, musicBus, uiBus, voiceBus, radioIn, muffle, shaper, clipCurve, noiseBuf, humGain, music = null;
+// Vrais sons : tirs enregistrés (The Free Firearm Sound Library, CC0) et voix (Piper : MLS et SIWIS, CC BY 4.0)
+const SND = { rifle: ['carbine', 2], smg: ['smg', 2], pistol: ['pistol', 2], shotgun: ['shotgun', 2], e_rifle: ['e_rifle', 3], e_pistol: ['e_pistol', 2], e_shotgun: ['e_shotgun', 2] };
+const SUS_VO = { p1: 'T’as entendu ?', p2: 'C’est quoi ce bruit ?', p3: 'Y’a quelqu’un ?', s1: 'Il est là !', s2: 'Les flics !', s3: 'Là-bas !', s4: 'Contact !',
+  b1: 'Aaah ! Mes yeux !', b2: 'J’y vois plus rien !', b3: 'Ça brûle !', h1: 'Je suis touché !', h2: 'Aïe ! Putain…', h3: 'Il m’a eu !',
+  u1: 'D’accord, d’accord ! Je me rends !', u2: 'Tirez pas ! Tirez pas !', u3: 'C’est bon, je lâche mon arme !', r1: 'Je recharge !' };
+const VO_ID = Object.fromEntries(Object.entries(SUS_VO).map(([k, v]) => [v, k]));
+const buffers = {};
+function loadSamples() {
+  const list = [];
+  for (const k in SND) for (let i = 1; i <= SND[k][1]; i++) list.push('sfx/' + SND[k][0] + '_' + i);
+  for (let v = 0; v < 4; v++) for (const id in SUS_VO) list.push('vo/s' + v + '_' + id);
+  for (const n of ['p_sh1', 'p_sh2', 'p_sh3', 'p_m_contact', 'p_m_ici', 'p_m_arrest', 'p_m_clear', 'c_a', 'c_start', 'c_down', 'i_train']) list.push('vo/' + n);
+  for (let i = 0; i < 10; i++) list.push('vo/c_d' + i, 'vo/p_d' + i);
+  for (const n of list) fetch(n + '.mp3').then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(b => AC.decodeAudioData(b)).then(buf => { buffers[n] = buf; }).catch(() => {});
+}
+function playBuf(name, d, t, rate = 1) {
+  const b = buffers[name]; if (!b || !AC) return 0;
+  const s = AC.createBufferSource(); s.buffer = b; s.playbackRate.value = rate; s.connect(d); s.start(t);
+  return b.duration / rate;
+}
+function pickBuf(key) {
+  const e = SND[key]; if (!e) return null;
+  const ok = []; for (let i = 1; i <= e[1]; i++) if (buffers['sfx/' + e[0] + '_' + i]) ok.push('sfx/' + e[0] + '_' + i);
+  return ok.length ? pick(ok) : null;
+}
 const sfx = {};
 function initAudio() {
   if (AC) { if (AC.state === 'suspended' && state !== 'pause') AC.resume().catch(() => {}); return; }
@@ -2453,7 +2480,16 @@ function initAudio() {
   verb.connect(verbGain); verbGain.connect(chain);
   chain.connect(comp); comp.connect(shaper); shaper.connect(muffle); muffle.connect(master);
   musicBus.connect(master); uiBus.connect(master);
+  voiceBus = AC.createGain(); voiceBus.connect(chain); const vVerb = AC.createGain(); vVerb.gain.value = 0.35; voiceBus.connect(vVerb); vVerb.connect(verb);
+  // radio : bande étroite + saturation
+  radioIn = AC.createGain();
+  const rHp = AC.createBiquadFilter(); rHp.type = 'highpass'; rHp.frequency.value = 380;
+  const rLp = AC.createBiquadFilter(); rLp.type = 'lowpass'; rLp.frequency.value = 2900;
+  const rSh = AC.createWaveShaper(); const rc = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; rc[i] = Math.tanh(4 * x) / Math.tanh(4); } rSh.curve = rc;
+  const rOut = AC.createGain(); rOut.gain.value = 0.6;
+  radioIn.connect(rHp); rHp.connect(rLp); rLp.connect(rSh); rSh.connect(rOut); rOut.connect(voiceBus);
   master.connect(AC.destination);
+  loadSamples();
   applyAudioSettings();
   humGain = AC.createGain(); humGain.gain.value = 0; humGain.connect(ambBus);
   [100, 200, 300, 400].forEach((f, i) => { const o = AC.createOscillator(); o.frequency.value = f; const g = AC.createGain(); g.gain.value = [1, 0.5, 0.25, 0.1][i]; o.connect(g); g.connect(humGain); o.start(); });
@@ -2478,6 +2514,7 @@ function applyAudioSettings() {
   sfxBus.gain.setTargetAtTime(settings.vSfx, t, 0.05);
   ambBus.gain.setTargetAtTime(settings.vAmb, t, 0.05);
   musicBus.gain.setTargetAtTime(settings.vMusic, t, 0.05);
+  voiceBus.gain.setTargetAtTime(settings.voices ? settings.vVoice * 1.2 : 0, t, 0.05);
   shaper.curve = settings.clip ? clipCurve : null;
 }
 // musique de menu : nappes sombres qui changent d'accord toutes les 8 secondes
@@ -2563,6 +2600,18 @@ const now = () => AC.currentTime;
 // coups de feu du joueur, un timbre par arme
 sfx.shot = (kind, suppressed) => {
   if (!AC) return; const t = now();
+  const rec = pickBuf(kind);
+  if (rec) {
+    if (suppressed) {
+      const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1500; lp.connect(dest(kind === 'pistol' ? 0.5 : 0.55));
+      playBuf(rec, lp, t, rand(1.02, 1.08));
+      noise(dest(0.35), t + 0.03, 0.035, { type: 'bandpass', freq: 3000, q: 3, gain: 0.7 });
+      return;
+    }
+    playBuf(rec, dest(kind === 'shotgun' ? 1.05 : 0.95), t, rand(0.97, 1.03));
+    tone(dest(0.55), t, kind === 'shotgun' ? 0.3 : 0.14, { f0: kind === 'shotgun' ? 85 : 120, f1: 34, gain: 1 });
+    return;
+  }
   if (suppressed) {
     const d = dest(kind === 'pistol' ? 0.55 : 0.6);
     noise(d, t, 0.09, { type: 'bandpass', freq: kind === 'pistol' ? 1300 : 1000, q: 1.1, gain: 1 });
@@ -2597,7 +2646,10 @@ sfx.shot = (kind, suppressed) => {
   }
 };
 sfx.dry = () => sfx.click(3800, 0.3);
-sfx.enemyShot = (pos, occ, kind) => { if (!AC) return; const t = now() + camera.position.distanceTo(pos) / 343, d = dest3d(pos, kind === 'shotgun' ? 2 : 1.6, occ);
+sfx.enemyShot = (pos, occ, kind) => { if (!AC) return; const t = now() + camera.position.distanceTo(pos) / 343;
+  const rec = pickBuf(kind === 'shotgun' ? 'e_shotgun' : kind === 'pistol' ? 'e_pistol' : 'e_rifle');
+  if (rec) { playBuf(rec, dest3d(pos, 1.5, occ), t, rand(0.95, 1.05)); return; }
+  const d = dest3d(pos, kind === 'shotgun' ? 2 : 1.6, occ);
   if (kind === 'shotgun') { noise(d, t, 0.5, { freq: 4000, fEnd: 250, gain: 1.4 }); tone(d, t, 0.34, { f0: 80, f1: 26, gain: 1.2 }); }
   else if (kind === 'pistol') { noise(d, t, 0.2, { freq: 7000, fEnd: 1000, gain: 1.1 }); tone(d, t, 0.13, { f0: 170, f1: 55, gain: 0.8 }); }
   else { noise(d, t, 0.34, { freq: 5500, fEnd: 500, gain: 1.2 }); tone(d, t, 0.24, { f0: 100, f1: 32, gain: 1 }); }
@@ -2683,7 +2735,18 @@ function speak(text, pitch, rate, volume, voiceIdx) {
   } catch (e) {}
 }
 const unitName = () => (character.unit || '4471').split('').join(' ');
-function radio(text, who = 'CENTRALE') { sfx.squelch(); subtitle(who, text, who === 'CENTRALE' ? '' : 'me'); const said = character.unit ? text.split(character.unit).join(unitName()) : text; setTimeout(() => speak(said, who === 'CENTRALE' ? 0.9 : 1.05, 1.08, 0.8, who === 'CENTRALE' ? 0 : 1), 150); }
+function radioSeq(parts, v) {
+  const u = String(character.unit || '4471');
+  if (!AC || !settings.voices || !/^[0-9]{1,6}$/.test(u)) return false;
+  const seq = [];
+  for (const p of parts) { if (p === '#') for (const ch of u) seq.push('vo/' + v + '_d' + ch); else seq.push('vo/' + p); }
+  if (!seq.every(n => buffers[n])) return false;
+  let t = now() + 0.16;
+  for (const n of seq) { t += playBuf(n, radioIn, t) + (n.includes('_d') ? 0.015 : 0.07); }
+  setTimeout(() => sfx.squelch(), (t - now()) * 1000);
+  return true;
+}
+function radio(text, who = 'CENTRALE', parts = null) { sfx.squelch(); subtitle(who, text, who === 'CENTRALE' ? '' : 'me'); if (parts && radioSeq(parts, who === 'CENTRALE' ? 'c' : 'p')) return; const said = character.unit ? text.split(character.unit).join(unitName()) : text; setTimeout(() => speak(said, who === 'CENTRALE' ? 0.9 : 1.05, 1.08, 0.8, who === 'CENTRALE' ? 0 : 1), 150); }
 function voiceLine(bot, text, force) {
   const t = performance.now();
   if (!force && t - lastEnemyVoice < 2600) return;
@@ -2692,6 +2755,7 @@ function voiceLine(bot, text, force) {
   if (dist > 28 || state !== 'play') return;
   lastEnemyVoice = t;
   subtitle('SUSPECT', text, 'enemy');
+  if (AC && settings.voices && VO_ID[text] && playBuf('vo/s' + (bot.idx % 4) + '_' + VO_ID[text], dest3d(V3(bot.pos.x, 1.6, bot.pos.z), 1.5, null, voiceBus), now() + 0.02)) return;
   speak(text, 0.55 + (bot.idx % 4) * 0.12, 1.12, clamp(1.4 - dist / 22, 0.25, 1), bot.idx + 2);
 }
 
@@ -2877,7 +2941,7 @@ function hurtPlayer(dmg, fromPos) {
   sfx.hurt(dmg > 18);
   $('dmgdir').style.transform = `rotate(${relAngle(fromPos).a}rad)`;
   dmgDirT = 1.2;
-  if (player.hp <= 0) { player.alive = false; state = 'dead'; deathT = 0; firing = false; setTimeout(() => radio(`Agent à terre ! Agent à terre ! Envoyez les secours pour le ${character.unit} !`), 900); }
+  if (player.hp <= 0) { player.alive = false; state = 'dead'; deathT = 0; firing = false; setTimeout(() => radio(`Agent à terre ! Agent à terre ! Envoyez les secours pour le ${character.unit} !`, 'CENTRALE', ['c_down', '#']), 900); }
 }
 
 // ---------- Armes : tir, rechargement, changement ----------
@@ -3006,9 +3070,9 @@ function hitmark(kill) { const h = $('hitmark'); h.classList.toggle('kill', kill
 function shout() {
   if (shoutT > 0 || mode !== 'mission') return;
   shoutT = 3;
-  const line = pick(['Police ! Lâchez vos armes !', 'Police ! Mains en l’air !', 'Police ! Couchez-vous !']);
+  const li = Math.floor(Math.random() * 3), line = ['Police ! Lâchez vos armes !', 'Police ! Mains en l’air !', 'Police ! Couchez-vous !'][li];
   subtitle('TOI', line, 'me');
-  speak(line, 1.0, 1.15, 1, 1);
+  if (!(AC && settings.voices && playBuf('vo/p_sh' + (li + 1), dest(1.1, 0, voiceBus), now()))) speak(line, 1.0, 1.15, 1, 1);
   setTimeout(() => {
     for (const b of bots) {
       if (!b.hostile) continue;
@@ -3032,7 +3096,7 @@ function tryArrest() {
   if (!b) return;
   b.arrest(); stats.arrests++;
   note('Suspect menotté');
-  setTimeout(() => radio(`Centrale, ici ${character.unit}. Un individu interpellé.`, character.unit), 500);
+  setTimeout(() => radio(`Centrale, ici ${character.unit}. Un individu interpellé.`, character.unit, ['p_m_ici', '#', 'p_m_arrest']), 500);
   rebuildTargets(); checkEnd();
 }
 
@@ -3391,7 +3455,7 @@ function refreshMenuLabels() {
   const a = loadout.att[loadout.primary];
   $('briefLoadout').innerHTML = `Équipement : <b>${WEAPONS[loadout.primary].name}</b> (${ATT_LABEL[a.optic]}, ${ATT_LABEL[a.muzzle]}, ${ATT_LABEL[a.rail]}) · <b>${WEAPONS.pistol.name}</b> · 2 grenades flash`;
   $('pauseArsenal').hidden = mode !== 'training';
-  $('bestLine').innerHTML = (best ? `Meilleur score : <b>${best}</b>` : 'Aucune intervention enregistrée.') + '<br>Tir réel · pas de soins automatiques · les suspects peuvent se rendre.';
+  $('bestLine').innerHTML = (best ? `Meilleur score : <b>${best}</b>` : 'Aucune intervention enregistrée.') + '<br>Tir réel · pas de soins automatiques · les suspects peuvent se rendre.<br><small>Sons de tir : The Free Firearm Sound Library (CC0) · Voix : Piper, jeux de données MLS et SIWIS (CC BY 4.0)</small>';
 }
 function drawMap() {
   const c = $('mapCanvas'), g = c.getContext('2d'), s = Math.min(c.width / COLS, c.height / ROWS);
@@ -3497,8 +3561,8 @@ function startGame(m) {
   $('missionSub').textContent = mode === 'mission' ? 'INTERVENTION' : 'ENTRAÎNEMENT';
   show(null);
   requestLock();
-  if (mode === 'mission') setTimeout(() => radio(`Centrale à ${character.unit}. Sept individus armés signalés dans l’entrepôt. Soyez prudent.`), 700);
-  else { subtitle('INSTRUCTEUR', 'Stand de tir. Munitions illimitées. Échap puis Arsenal pour changer d’arme ou d’accessoire.'); }
+  if (mode === 'mission') setTimeout(() => radio(`Centrale à ${character.unit}. Sept individus armés signalés dans l’entrepôt. Soyez prudent.`, 'CENTRALE', ['c_a', '#', 'c_start']), 700);
+  else { subtitle('INSTRUCTEUR', 'Stand de tir. Munitions illimitées. Échap puis Arsenal pour changer d’arme ou d’accessoire.'); if (AC && settings.voices) setTimeout(() => playBuf('vo/i_train', dest(0.9, 0.2, voiceBus), now()), 500); }
 }
 function pause() {
   if (state !== 'play') return;
@@ -3684,14 +3748,14 @@ function loop(nowMs) {
     updateCamera(dt, t);
     updateWeaponLogic(dt);
     for (const b of bots) b.update(dt);
-    if (mode === 'mission' && !firstContact && bots.some(b => b.state === 'combat')) { firstContact = true; setTimeout(() => radio(`${character.unit} à Centrale, contact ! Suspects armés !`, character.unit), 400); }
+    if (mode === 'mission' && !firstContact && bots.some(b => b.state === 'combat')) { firstContact = true; setTimeout(() => radio(`${character.unit} à Centrale, contact ! Suspects armés !`, character.unit, ['#', 'p_m_contact']), 400); }
     updateGun(dt, t);
     updateHud(dt);
     updateStamp(dt);
     hurtFx = Math.max((1 - player.hp / 100) * 0.3, hurtFx - dt * 0.6);
     blindFx = Math.max(0, blindFx - dt * 0.28);
     if (player.hp < 35) { heartT -= dt; if (heartT <= 0) { sfx.heart(); heartT = 0.85; } }
-    if (endT > 0) { endT -= dt; if (endT <= 0) { radio(`Centrale, ici ${character.unit}. Zone sécurisée. Envoyez une équipe.`, character.unit); finish(true); } }
+    if (endT > 0) { endT -= dt; if (endT <= 0) { radio(`Centrale, ici ${character.unit}. Zone sécurisée. Envoyez une équipe.`, character.unit, ['p_m_ici', '#', 'p_m_clear']); finish(true); } }
   } else if (state === 'dead') {
     deathT += dt;
     camera.position.y = lerp(camera.position.y, 0.25, 1 - Math.exp(-dt * 5));

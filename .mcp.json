@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "godot": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@coding-solo/godot-mcp"
+      ],
+      "env": {}
+    },
+    "godot-docs": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "bun",
+        "x",
+        "--bun",
+        "@nuskey8/godot-docs-mcp@latest"
+      ],
+      "env": {}
+    }
+  }
+}

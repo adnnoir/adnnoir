@@ -1,0 +1,15 @@
+{
+  "extraKnownMarketplaces": {
+    "superpowers-marketplace": {
+      "source": { "source": "github", "repo": "obra/superpowers-marketplace" }
+    },
+    "godot-claude-skills": {
+      "source": { "source": "github", "repo": "Randroids-Dojo/Godot-Claude-Skills" }
+    }
+  },
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true,
+    "godot@godot-claude-skills": true
+  },
+  "enabledMcpjsonServers": ["godot-docs", "godot"]
+}
