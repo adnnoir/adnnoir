@@ -1,0 +1,25 @@
+{
+    "name": "E7.ML",
+    "rootNamespace": "E7.ML",
+    "references": [
+        "E7.Game",
+        "Unity.ML-Agents"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "E7_MLAGENTS"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.ml-agents",
+            "expression": "2.0.0",
+            "define": "E7_MLAGENTS"
+        }
+    ],
+    "noEngineReferences": false
+}

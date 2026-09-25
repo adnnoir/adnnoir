@@ -17,6 +17,7 @@ namespace E7
         public float vMaster = 0.8f, vSfx = 1f, vAmb = 0.8f, vVoice = 0.9f, vMusic = 0.55f;
         public bool voices = true, subs = true, invertY = false, dot = true, fps = false;
         public int teammates = 2;           // coéquipiers IA (0 à 3)
+        public string brain = "regles";     // cerveau des suspects : regles ou reseau (ML-Agents)
     }
 
     [Serializable]

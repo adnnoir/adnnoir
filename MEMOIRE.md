@@ -33,7 +33,17 @@ Ce fichier est mis à jour à chaque étape. Claude le relit au début de chaque
   - `Resources/E7/Textures` : textures en PNG. `Resources/E7/Audio` : sons et voix. `Resources/E7/Shaders` : shaders E7/Lit, E7/LitFade, E7/Unlit et Hidden/E7/Bodycam.
   - `Scripts` : Core (sauvegarde, entrées, chargeur de modèles), Audio, World (niveau), FX, Player, AI, UI, ML.
 - Vérification : le C# est compilé avec `dotnet` et les références Unity (projet `scratchpad/check`), mais le jeu n'est pas lancé : Unity n'est pas disponible dans le conteneur.
-- Export : `scratchpad/exporter.js`, injecté dans une copie du jeu web (`bodycam/_export.html`, à ne pas commiter), puis lancé par `t_export.js`.
+- Export web → Unity : `unity/tools/export/` (`exporter.js` + `export.js`, voir son README).
+- Fait (compile sans erreur avec dotnet) :
+  - `Game` : démarrage automatique, états et radio ;
+  - `Level` : carte, NavMesh, abris, néons, cibles, objets ;
+  - `Player` et `WeaponSystem` : visée, recul, rechargements animés, pompe, grenade, laser ;
+  - `SuspectAI` : couverture, tir en se relevant, contournement, suppression, jetons de tir, reddition ;
+  - `TeammateAI` : suivre, tenir, engager, sommer, menotter (touches T et Y) ;
+  - `Squad`, `Humanoid` (corps animé, IK des bras), `FX`, `BodycamFX` (rendu + bloom), `AudioSys` et `SoundSynth` ;
+  - `Hud`, `Menus` (principal, briefing, arsenal 3D, personnage, paramètres en 4 onglets, dossier, pause, fin), `Save` (JSON).
+- ML : `Scripts/ML` (SuspectAgent, Arena), actif seulement si le paquet `com.unity.ml-agents` est installé. MLOps dans `unity/ml` (config PPO, `register_model.py`, `compare_models.py`, `train.sh`, `registry.json`).
+- À vérifier par l'utilisateur dans Unity 6 : c'est un premier lancement sans test réel, donc il faut corriger ce qui s'affiche dans la console.
 
 ## Outils installés
 - Skills (`.claude/skills`) : 23 skills de départ, plus emil-design-eng, frontend-design, godot-code-gen, godot-scene-design, godot-shader et prof.
@@ -43,5 +53,6 @@ Ce fichier est mis à jour à chaque étape. Claude le relit au début de chaque
   - `godot` : il faut Godot installé sur le PC.
 
 ## Journal
+- 2026-09-25 (suite 2) : projet Unity complet (jeu, IA, coéquipiers, menus, sauvegarde, ML-Agents, MLOps). Poussé sur la branche.
 - 2026-09-25 (suite) : export des modèles web vers Unity, puis code Unity (niveau, audio, effets, armes) en cours.
 - 2026-09-25 : visée corrigée, sauvegarde de carrière, installations (plugins, skills, MCP), skill prof, vrais sons de tir et voix dans le jeu web.

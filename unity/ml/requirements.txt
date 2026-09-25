@@ -1,0 +1,2 @@
+# Environnement Python pour entraîner l'IA (Python 3.10 recommandé)
+mlagents==1.1.0

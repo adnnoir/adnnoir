@@ -16,7 +16,7 @@ namespace E7
         readonly List<AudioSource> pool2D = new List<AudioSource>();
         readonly List<AudioSource> pool3D = new List<AudioSource>();
         readonly List<AudioSource> radioPool = new List<AudioSource>();
-        AudioSource ambRain, ambRoom, ambHum, music, tinnitus;
+        AudioSource ambRain, ambRoom, ambHum, music, tinnitus, uiSrc;
         AudioLowPassFilter muffle;
         float muffleT, muffleDur = 1f, muffleFrom = 18000f;
         int next2D, next3D, nextRadio;
@@ -63,7 +63,8 @@ namespace E7
                 radioPool.Add(s);
             }
             ambRain = Loop("rain", 0.035f); ambRoom = Loop("room", 0.05f); ambHum = Loop("hum", 0f);
-            music = Loop("music", 0f);
+            music = Loop("music", 0f); music.ignoreListenerPause = true;
+            uiSrc = MakeSource("ui", false); uiSrc.ignoreListenerPause = true;
             tinnitus = MakeSource("tinnitus", false); tinnitus.clip = Bank("tinnitus"); tinnitus.loop = true; tinnitus.volume = 0;
         }
 
@@ -173,7 +174,7 @@ namespace E7
 
         public void Sfx(string name, float vol = 1f, float pitch = 1f) => Play2D(Bank(name), vol * St.vSfx, pitch);
         public void Sfx3D(string name, Vector3 pos, float vol = 1f, bool? occ = null) => Play3D(Bank(name), pos, vol * St.vSfx, Random.Range(0.95f, 1.05f), occ);
-        public void Ui(bool hi = false) => Play2D(Bank(hi ? "uiHi" : "ui"), 0.7f);
+        public void Ui(bool hi = false) { uiSrc.PlayOneShot(Bank(hi ? "uiHi" : "ui"), 0.7f); }
 
         public void Step(bool loud, bool crouch) => Play2D(Bank((loud ? "stepLoud" : "step") + Random.Range(0, 4)), (crouch ? 0.12f : loud ? 0.45f : 0.26f) * St.vSfx, Random.Range(0.92f, 1.08f), Random.Range(-0.1f, 0.1f));
         public void EnemyStep(Vector3 pos, bool loud) { if (Camera.main && Vector3.Distance(pos, Camera.main.transform.position) < 26) Play3D(Bank("step" + Random.Range(0, 4)), pos, (loud ? 0.7f : 0.45f) * St.vSfx, Random.Range(0.9f, 1.1f)); }
